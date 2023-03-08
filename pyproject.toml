@@ -2,11 +2,12 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+# TODO: change the name of the package
 [project]
-name = "astronomer-cosmos"
+name = "astro-sdk-template"
 dynamic = ["version"]
-description = "Render 3rd party workflows in Airflow"
-readme = "README.rst"
+description = "Astronomer SDK Template"
+readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.7"
 authors = [
@@ -17,11 +18,9 @@ keywords = [
     "apache-airflow",
     "astronomer",
     "dags",
-    "dbt",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Environment :: Web Environment",
     "Framework :: Apache Airflow",
     "Framework :: Apache Airflow :: Provider",
     "Intended Audience :: Developers",
@@ -36,54 +35,15 @@ classifiers = [
 ]
 dependencies = [
     "apache-airflow>=2.4",
-    "Jinja2>=3.0.0",
-    "typing-extensions; python_version < '3.8'",
 ]
 
-[project.optional-dependencies]
-dbt-all = [
-    "dbt-bigquery",
-    "dbt-databricks",
-    "dbt-postgres",
-    "dbt-redshift",
-    "dbt-snowflake",
-    "astronomer-cosmos[dbt-openlineage]"
-]
-dbt-bigquery = [
-    "dbt-bigquery",
-]
-dbt-databricks = [
-    "dbt-databricks",
-]
-dbt-postgres = [
-    "dbt-postgres",
-]
-dbt-redshift = [
-    "dbt-redshift",
-]
-dbt-snowflake = [
-    "dbt-snowflake",
-]
-dbt-openlineage = [
-    "dbt-core",
-    "openlineage-dbt>=0.21.1"
-]
 databricks = [
     "databricks-sql-connector>=2.0.4;python_version>='3.10'",
     "databricks-cli",
     "apache-airflow-providers-databricks>=2.2.0",
     "mergedeep"
 ]
-all = [
-    "astronomer-cosmos[dbt-all]",
-    "astronomer-cosmos[databricks]",
-]
-docs =[
-    "sphinx",
-    "pydata-sphinx-theme",
-    "sphinx-autobuild",
-    "sphinx-tabs"
-]
+
 tests = [
     "pytest>=6.0",
     "pytest-split",
@@ -96,22 +56,23 @@ tests = [
     "sqlalchemy-stubs", # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
 ]
 
+# TODO: change the name of the package
 [project.urls]
-Homepage = "https://github.com/astronomer/astronomer-cosmos"
-Documentation = "https://github.com/astronomer/astronomer-cosmos"
+Homepage = "https://github.com/astronomer/astronomer-sdk-template"
+Documentation = "https://github.com/astronomer/astronomer-sdk-template"
 
 [tool.hatch.version]
-path = "cosmos/__init__.py"
+path = "src/astro_sdk_template/__init__.py"
 
-[tool.hatch.build.targets.sdist]
-include = [
-    "/cosmos",
+[tool.hatch.envs.test]
+dependencies = [
+  "pytest",
+  "pytest-cov",
 ]
 
 [tool.hatch.envs.docs]
 dependencies = [
     "sphinx",
-    "pydata-sphinx-theme",
     "sphinx-autobuild",
     "sphinx-tabs"
 ]
@@ -120,18 +81,66 @@ dependencies = [
 build = "sphinx-build -b html docs docs/_build"
 serve = "sphinx-autobuild docs docs/_build"
 
-[tool.isort]
-profile = "black"
-known_third_party = ["airflow", "jinja2"]
-
 [tool.mypy]
 strict = true
+
+
+[tool.distutils.bdist_wheel]
+universal = true
+
+
+[tool.black]
+target-version = ['py37']
+fix = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--tb=short --cov=src --cov-report=xml"
+testpaths = [
+    "tests",
+]
+
+
+[tool.pydocstyle]
+inherit = false
+add_ignore = "D100,D104,D105,D107,D205,D400,D401"
+convention = "pep257"
 
 [tool.ruff]
 line-length = 120
 
-[tool.distutils.bdist_wheel]
-universal = true
+# Enable Pyflakes `E` and `F` codes by default.
+extend-select = [
+    "W",    # pycodestyle warnings
+    "I",    # isort
+    "C90",  # Complexity
+#    "B",    # flake8-bugbear
+    "C",    # flake8-comprehensions
+#    "ANN",  # flake8-comprehensions
+    "ISC",  # flake8-implicit-str-concat
+    "T10",  # flake8-debugger
+    "A",    # flake8-builtins
+    "UP",   # pyupgrade
+]
+
+# Remove this in future
+extend-ignore = ["A002", "C901", "E402", "E501", "ISC001", "ISC003", "UP030"]
+
+# Exclude a variety of commonly ignored directories.
+extend-exclude = [
+    "__pycache__",
+    "docs/conf.py",
+]
+
+target-version = "py37"
+fix = true
+
+[tool.ruff.mccabe]
+max-complexity = 6
+
+[tool.ruff.isort]
+combine-as-imports = true
+known-first-party = ["tests"]
 
 [project.entry-points."airflow.plugins"]
 my_plugin = "cosmos.providers.databricks.plugin:CosmosDatabricksPlugin"
