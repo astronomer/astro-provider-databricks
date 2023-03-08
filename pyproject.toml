@@ -1,0 +1,125 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# TODO: change the name of the package
+[project]
+name = "astro-sdk-template"
+dynamic = ["version"]
+description = "Astronomer SDK Template"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.7"
+authors = [
+    { name = "Astronomer", email = "humans@astronomer.io" },
+]
+keywords = [
+    "airflow",
+    "apache-airflow",
+    "astronomer",
+    "dags",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Apache Airflow",
+    "Framework :: Apache Airflow :: Provider",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+dependencies = [
+    "apache-airflow>=2.4",
+]
+
+# TODO: change the name of the package
+[project.urls]
+Homepage = "https://github.com/astronomer/astronomer-sdk-template"
+Documentation = "https://github.com/astronomer/astronomer-sdk-template"
+
+[tool.hatch.version]
+path = "src/astro_sdk_template/__init__.py"
+
+[tool.hatch.envs.test]
+dependencies = [
+  "pytest",
+  "pytest-cov",
+]
+
+[tool.hatch.envs.docs]
+dependencies = [
+    "sphinx",
+    "sphinx-autobuild",
+    "sphinx-tabs"
+]
+
+[tool.hatch.envs.docs.scripts]
+build = "sphinx-build -b html docs docs/_build"
+serve = "sphinx-autobuild docs docs/_build"
+
+
+[tool.mypy]
+strict = true
+
+
+[tool.distutils.bdist_wheel]
+universal = true
+
+
+[tool.black]
+target-version = ['py37']
+fix = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--tb=short --cov=src --cov-report=xml"
+testpaths = [
+    "tests",
+]
+
+
+[tool.pydocstyle]
+inherit = false
+add_ignore = "D100,D104,D105,D107,D205,D400,D401"
+convention = "pep257"
+
+[tool.ruff]
+line-length = 120
+
+# Enable Pyflakes `E` and `F` codes by default.
+extend-select = [
+    "W",    # pycodestyle warnings
+    "I",    # isort
+    "C90",  # Complexity
+#    "B",    # flake8-bugbear
+    "C",    # flake8-comprehensions
+#    "ANN",  # flake8-comprehensions
+    "ISC",  # flake8-implicit-str-concat
+    "T10",  # flake8-debugger
+    "A",    # flake8-builtins
+    "UP",   # pyupgrade
+]
+
+# Remove this in future
+extend-ignore = ["A002", "C901", "E402", "E501", "ISC001", "ISC003", "UP030"]
+
+# Exclude a variety of commonly ignored directories.
+extend-exclude = [
+    "__pycache__",
+    "docs/conf.py",
+]
+
+target-version = "py37"
+fix = true
+
+[tool.ruff.mccabe]
+max-complexity = 6
+
+[tool.ruff.isort]
+combine-as-imports = true
+known-first-party = ["tests"]

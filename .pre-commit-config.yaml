@@ -1,0 +1,87 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: meta
+    hooks:
+      - id: identity
+      - id: check-hooks-apply
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+      - id: pretty-format-json
+        args: [ '--autofix' ]
+      - id: name-tests-test
+        args: [ '--pytest-test-first' ]
+      - id: detect-private-key
+      - id: detect-aws-credentials
+        args: [ "--allow-missing-credentials" ]
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: rst-backticks
+      - id: python-no-log-warn
+      - id: python-check-mock-methods
+      - id: python-check-blanket-type-ignore
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.4.2
+    hooks:
+      - id: forbid-crlf
+      - id: remove-crlf
+      - id: forbid-tabs
+      - id: remove-tabs
+
+  - repo: https://github.com/tcort/markdown-link-check
+    rev: v3.10.3
+    hooks:
+      - id: markdown-link-check
+        args: ["--config=mlc-config.json"]
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.3.1
+    hooks:
+      - id: pyupgrade
+        args:
+          - --py3-plus
+          - --keep-runtime-typing
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.246
+    hooks:
+      - id: ruff
+        args:
+          - --fix
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.29.0
+    hooks:
+      - id: yamllint
+        name: Check YAML files with yamllint
+        entry: yamllint -c yamllint-config.yml --strict
+        types: [yaml]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.2
+    hooks:
+      - id: codespell
+        name: Run codespell to check for common misspellings in files
+        language: python
+        types: [text]
+        args: ["--write-changes"]
+
+  - repo: https://github.com/psf/black
+    rev: 23.1.0
+    hooks:
+      - id: black
+ci:
+  autofix_commit_msg: 🎨 [pre-commit.ci] Auto format from pre-commit.com hooks
+  autoupdate_commit_msg: ⬆ [pre-commit.ci] pre-commit autoupdate
