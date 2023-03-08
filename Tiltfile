@@ -1,9 +1,9 @@
 docker_compose('dev/docker-compose.yaml')
 
-sync_pyproj_toml = sync('./pyproject.toml', '/usr/local/airflow/astro_sdk_template/pyproject.toml')
-sync_readme = sync('./README.md', '/usr/local/airflow/astro_sdk_template/README.md')
-sync_src = sync('./src', '/usr/local/airflow/astro_sdk_template/src')
-sync_dev_dir = sync('./src', '/usr/local/airflow/astro_sdk_template/dev')
+sync_pyproj_toml = sync('./pyproject.toml', '/usr/local/airflow/astro_databricks/pyproject.toml')
+sync_readme = sync('./README.md', '/usr/local/airflow/astro_databricks/README.md')
+sync_src = sync('./src', '/usr/local/airflow/astro_databricks/src')
+sync_dev_dir = sync('./src', '/usr/local/airflow/astro_databricks/dev')
 
 docker_build(
     'astro-sdk-template-dev',
@@ -25,7 +25,7 @@ docker_build(
         sync_readme,
         sync_dev_dir,
         run(
-            'cd /usr/local/airflow/astro_sdk_template && pip install -e .',
+            'cd /usr/local/airflow/astro_databricks && pip install -e .',
             trigger=['pyproject.toml']
         ),
     ]

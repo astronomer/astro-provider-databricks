@@ -1,14 +1,11 @@
-name: Build and test cosmos providers
+name: Build and test astro databricks provider
 on:
   push:
-    branches: [ 'main', 'release-**' ]
-    paths:
-      - 'cosmos/**'
+    branches: [ main]
 
   pull_request:
-    branches: [ 'main', 'release-**' ]
-    paths:
-      - 'cosmos/**'
+    branches: [ main]
+#    branches: [ main,  'release-**' ]
   # Run on PRs from forks
   pull_request_target:
     branches: [ 'main' ]
@@ -22,60 +19,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES: "airflow.* astro.* cosmos.*"
+  AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES: "airflow.* astro.* astro_databricks.*"
   CI_ENABLED: true
 
 jobs:
-# TODO: Fix Markdown-link-check failures https://github.com/astronomer/astronomer-cosmos/issues/172
-#  Markdown-link-check:
-#    if: github.event.action != 'labeled'
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: gaurav-nelson/github-action-markdown-link-check@v1
-#        with:
-#          config-file: '.github/workflows/mlc_config.json'
-#
-# TODO: Fix Type-check failures https://github.com/astronomer/astronomer-cosmos/issues/173
-#  Type-Check:
-#    if: github.event.action != 'labeled'
-#    runs-on: ubuntu-latest
-#    env:
-#      MYPY_FORCE_COLOR: 1
-#      TERM: xterm-color
-#      SETUPTOOLS_USE_DISTUTILS: stdlib
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: actions/setup-python@v3
-#        with:
-#          python-version: '3.8'
-#          architecture: 'x64'
-#      - uses: actions/cache@v3
-#        with:
-#          path: |
-#            ~/.cache/pip
-#            .nox
-#          key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
-#      - run: pip3 install nox
-#      - run: nox -s type_check
-
-  Build-Docs:
-    if: github.event.action != 'labeled'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-        with:
-          python-version: '3.9'
-          architecture: 'x64'
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/pip
-            .nox
-          key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
-      - run: pip3 install nox
-      - run: nox -s build_docs
 
   Run-Unit-tests-Airflow-2-5:
     strategy:
@@ -115,10 +62,10 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('pyproject.toml') }}-version-${{ hashFiles('cosmos/__init__.py') }}
+          key: tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('pyproject.toml') }}-version-${{ hashFiles('src/astro_databricks/__init__.py') }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-${{ matrix.version }}(airflow='${{ matrix.airflow }}')" -- tests/ --ignore "tests/example_dags" --cov=cosmos --cov-report=xml --cov-branch
+      - run: nox -s "test-${{ matrix.version }}(airflow='${{ matrix.airflow }}')" -- tests/ --ignore "tests/example_dags" --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
@@ -159,7 +106,7 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.5-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('cosmos/__init__.py') }}
+          key: ${{ runner.os }}-2.5-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('src/astro_databricks/__init__.py') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox

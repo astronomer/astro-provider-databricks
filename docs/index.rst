@@ -1,98 +1,71 @@
-Cosmos
-========================
+Astro Databricks Provider
+=========================
 
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-   :caption: Contents:
+This is a provider for running Databricks Jobs on Aiflow created by Astronomer.
 
-   Home <self>
-   dbt <dbt/index>
-   API Reference <reference/index>
-   Contributing <contributing>
+Databricks Workflow TaskGroup
+""""""""""""""""""""""""""""""""""""
 
-.. note::
+The Databricks Workflow TaskGroup is a recent addition to the Databricks platform that allows users to easily create
+and manage Databricks Jobs with multiple notebooks, SQL statements, python files, etc. One of the biggest benefits
+offered by Databricks Jobs is the use of Job Clusters, which are significantly cheaper than all-purpose clusters.
 
-   Cosmos is under active development. Please open an issue if you have any questions or feedback!
+With the DatabricksWorkflowTaskGroup, users can take advantage of the cost savings offered by using Jobs clusters,
+while also having the flexibility and multi-platform capabilities of Airflow.
 
-Cosmos is a framework for dynamically generating `Apache Airflow <https://airflow.apache.org/>`_ DAGs from other tools and frameworks. Develop your workflow in your tool of choice and render it in Airflow as a DAG or Task Group!
+The DatabricksWorkflowTaskGroup is designed to look and function like a standard task group,
+with the added ability to include specific Databricks arguments.
+An example of how to use the DatabricksWorkflowTaskGroup can be seen in the following code snippet:
 
-Current support for:
- - dbt
+.. literalinclude:: /../examples/databricks/example_databricks_workflow.py
+    :language: python
+    :dedent: 4
+    :start-after: [START howto_databricks_workflow_notebook]
+    :end-before: [END howto_databricks_workflow_notebook]
 
-Coming soon:
- - Jupyter
- - Hex
- - And more...open an issue if you have a request!
+At the top-level Taskgroup definition, users can define workflow-level parameters such as ``notebook_params``,
+``notebook_packages`` or ``spark_submit_params``. These parameters will be applied to all tasks within the Workflow.
+Inside of the taskgroup, users can define the individual tasks that make up the workflow. Currently the only officially
+supported operator is the DatabricksNotebookOperator, but other operators can be used as long as they contain the
+``convert_to_databricks_workflow_task`` function. In the future we plan to support SQL and python functions via the
+ref:`https://github.com/astronomer/astro-sdk<Astro SDK>`.
 
-Quickstart
-========================
+For each notebook task, packages defined with the ``notebook_packages`` parameter defined at the task level are
+installed and additionally, all the packages supplied via the workflow-level parameter ``notebook_packages`` are also
+installed for its run. The collated ``notebook_packages`` list type parameter is transformed into the ``libraries`` list
+type parameter accepted by the Databricks API and a list of supported library types and their format for the API
+specification is mentioned at the Databricks documentation:
+https://docs.databricks.com/dev-tools/api/latest/libraries.html#managedlibrarieslibrary
 
-dbt
-____________________
+.. warning::
+    Make sure that you do not specify duplicate libraries across workflow-level and task-level ``notebook-packages`` as
+    the Databricks task will then fail complaining about duplicate installation of the library.
 
-Install the package:
+Retries
+=======
 
-.. code-block:: bash
+When repairing a DatabBricks workflow, we need to submit a repair request using databricks' Jobs API. One core difference between how databricks repairs work v.s. Airflow retries is that Airflow is able to retry one task at a time, while Databricks expects a single repair request for all tasks you want to rerun (this is because databricks starts a new job cluster for each repair request, and jobs clusters can't be modified once they are started).
 
-    pip install astronomer-cosmos[dbt.all]
+To avoid creating multiple clusters for each failed task, we do not use Airflow's built-in retries. Instead, we offer a "Repair all tasks" button in the "launch" task's grid and graph node on the Airflow UI. This button finds all failed and skipped tasks and sends them to Databricks for repair. By using this approach, we can save time and resources, as we do not need to create a new cluster for each failed task.
 
+.. image:: assets/images/repair-all-failed.png
+  :width: 400
+  :alt: Alternative text
+In addition to the "Repair all tasks" button, we also provide a "Repair single task" button to repair a specific failed task. This button can be used if we want to retry a single task rather than all failed tasks.
 
-Create a DAG and import the ``DbtTaskGroup`` operator. The ``DbtTaskGroup`` operator requires a the name of your dbt project, an Airflow connection ID, a schema, and any additional arguments you'd like to pass to dbt.
+.. image:: assets/images/repair-single-failed.png
+  :width: 400
+  :alt: Alternative text
+It is important to note that Databricks does not support repairing a task that has a failing upstream. Therefore, if we want to skip a notebook and run downstream tasks, we need to add a "dbutils.notebook.exit("success")" at the top of the notebook inside of databricks. This will ensure that the notebook does not run and the downstream tasks can continue to execute.
 
-.. code-block:: python
+.. image:: assets/images/dbutils-notebook-success.png
+  :width: 400
+  :alt: Alternative text
+Limitations
+===========
+The DatabricksWorkflowTaskGroup is currently in beta and has the following limitations:
 
-    from pendulum import datetime
-
-    from airflow import DAG
-    from airflow.operators.empty import EmptyOperator
-    from cosmos.providers.dbt.task_group import DbtTaskGroup
-
-
-    with DAG(
-        dag_id="extract_dag",
-        start_date=datetime(2022, 11, 27),
-        schedule="@daily",
-    ) as dag:
-
-        e1 = EmptyOperator(task_id="ingestion_workflow")
-
-        dbt_tg = DbtTaskGroup(
-            group_id="dbt_tg",
-            dbt_project_name="jaffle_shop",
-            conn_id="airflow_db",
-            dbt_args={
-                "schema": "public",
-            },
-        )
-
-        e2 = EmptyOperator(task_id="some_extraction")
-
-        e1 >> dbt_tg >> e2
-
-
-The ``DbtTaskGroup`` operator will automatically generate a TaskGroup with the tasks defined in your dbt project. Here's what the DAG looks like in the Airflow UI:
-
-
-.. figure:: https://github.com/astronomer/astronomer-cosmos/raw/main/docs/_static/dbt_dag.png
-   :width: 800
-
-   dbt's default jaffle_shop project rendered as a TaskGroup in Airflow
-
-
-Principles
-========================
-
-`Astronomer Cosmos` is a package to parse and render third-party workflows as Airflow DAGs, `Airflow TaskGroups <https://docs.astronomer.io/learn/task-groups>`_, or individual tasks.
-
-Cosmos contains `providers` for third-party tools, and each `provider` can be deconstructed into the following components:
-
-- ``parsers``: These are mostly hidden from the end user and are responsible for extracting the workflow from the provider and converting it into ``Task`` and ``Group`` objects. These are executed whenever the Airflow Scheduler heartbeats, allowing us to dynamically render the dependency graph of the workflow.
-- ``operators``: These represent the "user interface" of Cosmos -- lightweight classes the user can import and implement in their DAG to define their target behavior. They are responsible for executing the tasks in the workflow.
-
-Cosmos operates on a few guiding principles:
-
-- **Dynamic**: Cosmos generates DAGs dynamically, meaning that the dependency graph of the workflow is generated at runtime. This allows users to update their workflows without having to restart Airflow.
-- **Flexible**: Cosmos is not opinionated in that it does not enforce a specific rendering method for third-party systems; users can decide whether they'd like to render their workflow as a DAG, TaskGroup, or individual task.
-- **Extensible**: Cosmos is designed to be extensible. Users can add their own parsers and operators to support their own workflows.
-- **Modular**: Cosmos is designed to be modular. Users can install only the dependencies they need for their workflows.
+* Since Databricks Workflow Jobs do not support dynamic parameters at the task level, we recommend placing dynamic parameters
+at the TaskGroup level (e.g. the ``notebook_params`` parameter in the example above). This will ensure that the job is not changed every time
+the DAG is run.
+* If you plan to run the same DAG multiple times at the same time, make sure to set the ``max_concurrency`` parameter to the expected number of concurrent runs.

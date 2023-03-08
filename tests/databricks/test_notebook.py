@@ -3,9 +3,8 @@ from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import AirflowException
-
-from cosmos.providers.databricks.notebook import DatabricksNotebookOperator
-from cosmos.providers.databricks.workflow import (
+from astro_databricks.operators.notebook import DatabricksNotebookOperator
+from astro_databricks.operators.workflow import (
     DatabricksMetaData,
     DatabricksWorkflowTaskGroup,
 )
@@ -32,10 +31,10 @@ def databricks_notebook_operator():
 
 
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator.launch_notebook_job"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator.launch_notebook_job"
 )
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator.monitor_databricks_job"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator.monitor_databricks_job"
 )
 def test_databricks_notebook_operator_without_taskgroup(mock_monitor, mock_launch, dag):
     with dag:
@@ -63,13 +62,13 @@ def test_databricks_notebook_operator_without_taskgroup(mock_monitor, mock_launc
 
 
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator.launch_notebook_job"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator.launch_notebook_job"
 )
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator.monitor_databricks_job"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator.monitor_databricks_job"
 )
 @mock.patch(
-    "cosmos.providers.databricks.workflow._CreateDatabricksWorkflowOperator.execute"
+    "astro_databricks.operators.workflow._CreateDatabricksWorkflowOperator.execute"
 )
 def test_databricks_notebook_operator_with_taskgroup(
     mock_create, mock_monitor, mock_launch, dag
@@ -113,15 +112,15 @@ def test_databricks_notebook_operator_with_taskgroup(
 
 
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator.monitor_databricks_job"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator.monitor_databricks_job"
 )
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator._get_databricks_task_id"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator._get_databricks_task_id"
 )
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator._get_api_client"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator._get_api_client"
 )
-@mock.patch("cosmos.providers.databricks.notebook.RunsApi")
+@mock.patch("astro_databricks.operators.notebook.RunsApi")
 def test_databricks_notebook_operator_without_taskgroup_new_cluster(
     mock_runs_api, mock_api_client, mock_get_databricks_task_id, mock_monitor, dag
 ):
@@ -159,15 +158,15 @@ def test_databricks_notebook_operator_without_taskgroup_new_cluster(
 
 
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator.monitor_databricks_job"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator.monitor_databricks_job"
 )
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator._get_databricks_task_id"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator._get_databricks_task_id"
 )
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator._get_api_client"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator._get_api_client"
 )
-@mock.patch("cosmos.providers.databricks.notebook.RunsApi")
+@mock.patch("astro_databricks.operators.notebook.RunsApi")
 def test_databricks_notebook_operator_without_taskgroup_existing_cluster(
     mock_runs_api, mock_api_client, mock_get_databricks_task_id, mock_monitor, dag
 ):
@@ -205,12 +204,12 @@ def test_databricks_notebook_operator_without_taskgroup_existing_cluster(
 
 
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator.monitor_databricks_job"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator.monitor_databricks_job"
 )
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator._get_api_client"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator._get_api_client"
 )
-@mock.patch("cosmos.providers.databricks.notebook.RunsApi")
+@mock.patch("astro_databricks.operators.notebook.RunsApi")
 def test_databricks_notebook_operator_without_taskgroup_existing_cluster_and_new_cluster(
     mock_runs_api, mock_api_client, mock_monitor, dag
 ):
@@ -233,12 +232,12 @@ def test_databricks_notebook_operator_without_taskgroup_existing_cluster_and_new
 
 
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator.monitor_databricks_job"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator.monitor_databricks_job"
 )
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator._get_api_client"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator._get_api_client"
 )
-@mock.patch("cosmos.providers.databricks.notebook.RunsApi")
+@mock.patch("astro_databricks.operators.notebook.RunsApi")
 def test_databricks_notebook_operator_without_taskgroup_no_cluster(
     mock_runs_api, mock_api_client, mock_monitor, dag
 ):
@@ -286,7 +285,7 @@ def test_handle_final_state_exception(databricks_notebook_operator):
         databricks_notebook_operator._handle_final_state(final_state)
 
 
-@mock.patch("cosmos.providers.databricks.notebook.RunsApi")
+@mock.patch("astro_databricks.operators.notebook.RunsApi")
 @mock.patch("time.sleep")
 def test_wait_for_pending_task(mock_sleep, mock_runs_api, databricks_notebook_operator):
     # create a mock current task with "PENDING" state
@@ -301,7 +300,7 @@ def test_wait_for_pending_task(mock_sleep, mock_runs_api, databricks_notebook_op
     mock_runs_api.reset_mock()
 
 
-@mock.patch("cosmos.providers.databricks.notebook.RunsApi")
+@mock.patch("astro_databricks.operators.notebook.RunsApi")
 @mock.patch("time.sleep")
 def test_wait_for_terminating_task(
     mock_sleep, mock_runs_api, databricks_notebook_operator
@@ -318,7 +317,7 @@ def test_wait_for_terminating_task(
     mock_runs_api.reset_mock()
 
 
-@mock.patch("cosmos.providers.databricks.notebook.RunsApi")
+@mock.patch("astro_databricks.operators.notebook.RunsApi")
 @mock.patch("time.sleep")
 def test_wait_for_running_task(mock_sleep, mock_runs_api, databricks_notebook_operator):
     current_task = {"run_id": "123", "state": {"life_cycle_state": "PENDING"}}
@@ -345,13 +344,13 @@ def test_get_lifestyle_state(databricks_notebook_operator):
     )
 
 
-@mock.patch("cosmos.providers.databricks.notebook.DatabricksHook")
-@mock.patch("cosmos.providers.databricks.notebook.RunsApi")
+@mock.patch("astro_databricks.operators.notebook.DatabricksHook")
+@mock.patch("astro_databricks.operators.notebook.RunsApi")
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator._get_api_client"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator._get_api_client"
 )
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator._get_databricks_task_id"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator._get_databricks_task_id"
 )
 def test_monitor_databricks_job_success(
     mock_get_databricks_task_id,
@@ -385,13 +384,13 @@ def test_monitor_databricks_job_success(
     )
 
 
-@mock.patch("cosmos.providers.databricks.notebook.DatabricksHook")
-@mock.patch("cosmos.providers.databricks.notebook.RunsApi")
+@mock.patch("astro_databricks.operators.notebook.DatabricksHook")
+@mock.patch("astro_databricks.operators.notebook.RunsApi")
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator._get_api_client"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator._get_api_client"
 )
 @mock.patch(
-    "cosmos.providers.databricks.notebook.DatabricksNotebookOperator._get_databricks_task_id"
+    "astro_databricks.operators.notebook.DatabricksNotebookOperator._get_databricks_task_id"
 )
 def test_monitor_databricks_job_fail(
     mock_get_databricks_task_id,

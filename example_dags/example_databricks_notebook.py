@@ -59,7 +59,3 @@ with dag:
         job_cluster_key="random_cluster_key",
         new_cluster=NEW_CLUSTER_SPEC,
     )
-
-
-def test_databricks_notebook():
-    dag.test(conn_file_path="test-connections.yaml")

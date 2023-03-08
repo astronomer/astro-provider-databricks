@@ -15,7 +15,7 @@ from airflow.utils.db import create_session
 from airflow.utils.state import State
 from databricks_cli.sdk.service import JobsService
 
-from cosmos.providers.databricks.plugin import (
+from astro_databricks.plugins.plugin import (
     DatabricksJobRepairAllFailedLink,
     DatabricksJobRepairSingleFailedLink,
     DatabricksJobRunLink,
@@ -24,7 +24,7 @@ from cosmos.providers.databricks.plugin import (
     _get_databricks_task_id,
     _repair_task,
 )
-from cosmos.providers.databricks.workflow import DatabricksMetaData
+from astro_databricks.operators.workflow import DatabricksMetaData
 
 
 @pytest.fixture
@@ -45,9 +45,9 @@ def mock_session():
     return MagicMock()
 
 
-@patch("cosmos.providers.databricks.plugin.get_airflow_app")
-@patch("cosmos.providers.databricks.plugin._get_dagrun")
-@patch("cosmos.providers.databricks.plugin.clear_task_instances")
+@patch("astro_databricks.plugins.plugin.get_airflow_app")
+@patch("astro_databricks.plugins.plugin._get_dagrun")
+@patch("astro_databricks.plugins.plugin.clear_task_instances")
 def test_clear_task_instances(
     mock_clear_tasks, mock_dagrun, mock_get_airflow_app, session
 ):
@@ -77,9 +77,9 @@ def test_clear_task_instances(
     mock_clear_tasks.assert_called_once_with(expected_tis, mock_session)
 
 
-@patch("cosmos.providers.databricks.plugin.get_airflow_app")
-@patch("cosmos.providers.databricks.plugin.XCom.get_value")
-@patch("cosmos.providers.databricks.plugin.DatabricksHook")
+@patch("astro_databricks.plugins.plugin.get_airflow_app")
+@patch("astro_databricks.plugins.plugin.XCom.get_value")
+@patch("astro_databricks.plugins.plugin.DatabricksHook")
 def test_databricks_job_run_link(mock_hook, mock_xcom, mock_get_airflow_app, mock_dag):
     mock_dag_bag = MagicMock()
     mock_dag_bag.get_dag.return_value = mock_dag
@@ -128,7 +128,7 @@ def mock_dagrun():
     return dagrun
 
 
-@mock.patch("cosmos.providers.databricks.plugin.XCom")
+@mock.patch("astro_databricks.plugins.plugin.XCom")
 def test_repair_all_get_link(mock_xcom, mock_dagrun, mock_dag, mock_session):
     # Arrange
     task_instance_key = TaskInstanceKey(
@@ -162,8 +162,8 @@ def test_repair_all_get_link(mock_xcom, mock_dagrun, mock_dag, mock_session):
     )
 
 
-@mock.patch("cosmos.providers.databricks.plugin.get_airflow_app")
-@mock.patch("cosmos.providers.databricks.plugin._get_dagrun")
+@mock.patch("astro_databricks.plugins.plugin.get_airflow_app")
+@mock.patch("astro_databricks.plugins.plugin._get_dagrun")
 def test_get_tasks_to_run(mock_dagrun, mock_airflow_app):
     link = DatabricksJobRepairAllFailedLink()
     ti_key = TaskInstanceKey(dag_id="test_dag", task_id="test_task", run_id="test_run")
@@ -240,9 +240,9 @@ def test_get_dagrun(session, dag):
     assert result == dr
 
 
-@mock.patch("cosmos.providers.databricks.plugin.DatabricksHook")
-@mock.patch("cosmos.providers.databricks.plugin.JobsService")
-@mock.patch("cosmos.providers.databricks.plugin.ApiClient")
+@mock.patch("astro_databricks.plugins.plugin.DatabricksHook")
+@mock.patch("astro_databricks.plugins.plugin.JobsService")
+@mock.patch("astro_databricks.plugins.plugin.ApiClient")
 def test_repair_task(mock_api_client, mock_jobs_service, mock_hook):
     databricks_conn_id = "my_databricks_conn"
     databricks_run_id = "my_databricks_run"
@@ -298,7 +298,7 @@ def test_repair_task(mock_api_client, mock_jobs_service, mock_hook):
     )
 
 
-@patch("cosmos.providers.databricks.plugin.get_airflow_app")
+@patch("astro_databricks.plugins.plugin.get_airflow_app")
 def test_databricks_job_repair_single_failed_link(mock_get_airflow_app, dag):
     mock_dag_bag = MagicMock()
     mock_task = MagicMock(
@@ -326,6 +326,6 @@ def test_databricks_job_repair_single_failed_link(mock_get_airflow_app, dag):
 
     mock_xcom = MagicMock()
     mock_xcom.get_one.return_value = metadata
-    with patch("cosmos.providers.databricks.plugin.XCom", mock_xcom):
+    with patch("astro_databricks.plugins.plugin.XCom", mock_xcom):
         link.get_link(mock_task, dttm=None, ti_key=ti_key)
         f"/repair_databricks_job?dag_id={dag_id}&databricks_conn_id={databricks_conn_id}&databricks_run_id={databricks_run_id}&tasks_to_repair={_get_databricks_task_id(mock_task)}"

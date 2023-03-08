@@ -21,13 +21,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 
 # Install astro-sdk-template
-COPY ./pyproject.toml  ${AIRFLOW_HOME}/astro_sdk_template/
+COPY ./pyproject.toml  ${AIRFLOW_HOME}/astro_databricks/
 # The following file are needed because version they are referenced from pyproject.toml
-COPY ./README.md  ${AIRFLOW_HOME}/astro_sdk_template/
-COPY ./src/astro_sdk_template/__init__.py  ${AIRFLOW_HOME}/astro_sdk_template/src/astro_sdk_template/__init__.py
+COPY ./README.md  ${AIRFLOW_HOME}/astro_databricks/
+COPY ./src/astro_databricks/__init__.py  ${AIRFLOW_HOME}/astro_databricks/src/astro_databricks/__init__.py
 
-RUN ls -l ${AIRFLOW_HOME}/astro_sdk_template/
-RUN pip install -e "${AIRFLOW_HOME}/astro_sdk_template"
+RUN ls -l ${AIRFLOW_HOME}/astro_databricks/
+RUN pip install -e "${AIRFLOW_HOME}/astro_databricks"
 
 
 USER astro

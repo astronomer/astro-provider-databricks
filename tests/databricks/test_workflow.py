@@ -1,7 +1,7 @@
 from unittest import mock
 
-from cosmos.providers.databricks.notebook import DatabricksNotebookOperator
-from cosmos.providers.databricks.workflow import DatabricksWorkflowTaskGroup
+from astro_databricks.operators.notebook import DatabricksNotebookOperator
+from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
 
 expected_workflow_json = {
     "name": "unit_test_dag.test_workflow",
@@ -44,9 +44,9 @@ expected_workflow_json = {
 }
 
 
-@mock.patch("cosmos.providers.databricks.workflow.DatabricksHook")
-@mock.patch("cosmos.providers.databricks.workflow.ApiClient")
-@mock.patch("cosmos.providers.databricks.workflow.JobsApi")
+@mock.patch("astro_databricks.operators.workflow.DatabricksHook")
+@mock.patch("astro_databricks.operators.workflow.ApiClient")
+@mock.patch("astro_databricks.operators.workflow.JobsApi")
 def test_create_workflow_from_notebooks_with_create(
     mock_jobs_api, mock_api, mock_hook, dag
 ):
@@ -94,10 +94,10 @@ def test_create_workflow_from_notebooks_with_create(
     )
 
 
-@mock.patch("cosmos.providers.databricks.workflow.DatabricksHook")
-@mock.patch("cosmos.providers.databricks.workflow.ApiClient")
-@mock.patch("cosmos.providers.databricks.workflow.JobsApi")
-@mock.patch("cosmos.providers.databricks.workflow._get_job_by_name")
+@mock.patch("astro_databricks.operators.workflow.DatabricksHook")
+@mock.patch("astro_databricks.operators.workflow.ApiClient")
+@mock.patch("astro_databricks.operators.workflow.JobsApi")
+@mock.patch("astro_databricks.operators.workflow._get_job_by_name")
 def test_create_workflow_from_notebooks_existing_job(
     mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag
 ):
@@ -145,10 +145,10 @@ def test_create_workflow_from_notebooks_existing_job(
     )
 
 
-@mock.patch("cosmos.providers.databricks.workflow.DatabricksHook")
-@mock.patch("cosmos.providers.databricks.workflow.ApiClient")
-@mock.patch("cosmos.providers.databricks.workflow.JobsApi")
-@mock.patch("cosmos.providers.databricks.workflow._get_job_by_name")
+@mock.patch("astro_databricks.operators.workflow.DatabricksHook")
+@mock.patch("astro_databricks.operators.workflow.ApiClient")
+@mock.patch("astro_databricks.operators.workflow.JobsApi")
+@mock.patch("astro_databricks.operators.workflow._get_job_by_name")
 def test_create_workflow_with_arbitrary_extra_job_params(
     mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag
 ):

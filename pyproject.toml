@@ -4,12 +4,14 @@ build-backend = "hatchling.build"
 
 # TODO: change the name of the package
 [project]
-name = "astro-sdk-template"
+name = "astro-providers-databricks"
 dynamic = ["version"]
 description = "Astronomer SDK Template"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.7"
+packages = [{include = "astro_databricks", from = "src"}]
+
 authors = [
     { name = "Astronomer", email = "humans@astronomer.io" },
 ]
@@ -34,16 +36,14 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "apache-airflow>=2.4",
-]
-
-databricks = [
+    "apache-airflow>=2.2.5",
     "databricks-sql-connector>=2.0.4;python_version>='3.10'",
     "databricks-cli",
     "apache-airflow-providers-databricks>=2.2.0",
     "mergedeep"
 ]
 
+[project.optional-dependencies]
 tests = [
     "pytest>=6.0",
     "pytest-split",
@@ -62,12 +62,12 @@ Homepage = "https://github.com/astronomer/astronomer-sdk-template"
 Documentation = "https://github.com/astronomer/astronomer-sdk-template"
 
 [tool.hatch.version]
-path = "src/astro_sdk_template/__init__.py"
+path = "src/astro_databricks/__init__.py"
 
 [tool.hatch.envs.test]
 dependencies = [
-  "pytest",
-  "pytest-cov",
+    "pytest",
+    "pytest-cov",
 ]
 
 [tool.hatch.envs.docs]
@@ -76,10 +76,17 @@ dependencies = [
     "sphinx-autobuild",
     "sphinx-tabs"
 ]
-
 [tool.hatch.envs.docs.scripts]
 build = "sphinx-build -b html docs docs/_build"
 serve = "sphinx-autobuild docs docs/_build"
+
+[tool.hatch.build]
+sources = ["src"]
+
+[tool.hatch.build.targets.wheel]
+include = [
+  "/src/astro_databricks",
+]
 
 [tool.mypy]
 strict = true
@@ -95,7 +102,7 @@ fix = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--tb=short --cov=src --cov-report=xml"
+addopts = "--tb=short --cov=src --cov-report=xml --import-mode=importlib"
 testpaths = [
     "tests",
 ]
@@ -111,16 +118,16 @@ line-length = 120
 
 # Enable Pyflakes `E` and `F` codes by default.
 extend-select = [
-    "W",    # pycodestyle warnings
-    "I",    # isort
-    "C90",  # Complexity
-#    "B",    # flake8-bugbear
-    "C",    # flake8-comprehensions
-#    "ANN",  # flake8-comprehensions
-    "ISC",  # flake8-implicit-str-concat
-    "T10",  # flake8-debugger
-    "A",    # flake8-builtins
-    "UP",   # pyupgrade
+    "W", # pycodestyle warnings
+    "I", # isort
+    "C90", # Complexity
+    #    "B",    # flake8-bugbear
+    "C", # flake8-comprehensions
+    #    "ANN",  # flake8-comprehensions
+    "ISC", # flake8-implicit-str-concat
+    "T10", # flake8-debugger
+    "A", # flake8-builtins
+    "UP", # pyupgrade
 ]
 
 # Remove this in future
@@ -143,4 +150,4 @@ combine-as-imports = true
 known-first-party = ["tests"]
 
 [project.entry-points."airflow.plugins"]
-my_plugin = "cosmos.providers.databricks.plugin:CosmosDatabricksPlugin"
+my_plugin = "astro_databricks.plugins.plugin:AstroDatabricksPlugin"

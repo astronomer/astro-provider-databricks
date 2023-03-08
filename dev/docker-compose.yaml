@@ -25,7 +25,7 @@ x-airflow-common:
     - ./dags:/usr/local/airflow/dags
     - ./logs:/usr/local/airflow/logs
     - ./plugins:/usr/local/airflow/plugins
-    - ../src:/usr/local/airflow/astro_sdk_template/src
+    - ../src:/usr/local/airflow/astro_databricks/src
   depends_on:
     &airflow-common-depends-on
     redis:
