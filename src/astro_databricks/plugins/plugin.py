@@ -482,8 +482,8 @@ repair_databricks_package = {
 }
 
 
-class CosmosDatabricksPlugin(AirflowPlugin):
-    name = "databricks_plugin"
+class AstroDatabricksPlugin(AirflowPlugin):
+    name = "astro_databricks_plugin"
     operator_extra_links = [
         DatabricksJobRepairAllFailedLink(),
         DatabricksJobRepairSingleFailedLink(),
