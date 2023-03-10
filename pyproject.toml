@@ -36,7 +36,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "apache-airflow>=2.2.5",
+    "apache-airflow>=2.2.4",
     "databricks-sql-connector>=2.0.4;python_version>='3.10'",
     "databricks-cli",
     "apache-airflow-providers-databricks>=2.2.0",
@@ -44,6 +44,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+docs =[
+    "pydata_sphinx_theme",
+    "sphinx",
+    "sphinx-autobuild",
+    "sphinx-tabs"
+]
 tests = [
     "pytest>=6.0",
     "pytest-split",
@@ -102,7 +108,7 @@ fix = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--tb=short --cov=src --cov-report=xml --import-mode=importlib"
+addopts = "-s --cov=src --cov-branch --cov-report term-missing"
 testpaths = [
     "tests",
 ]

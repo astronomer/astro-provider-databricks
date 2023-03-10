@@ -80,7 +80,10 @@ def test_clear_task_instances(
 @patch("astro_databricks.plugins.plugin.get_airflow_app")
 @patch("astro_databricks.plugins.plugin.XCom.get_value")
 @patch("astro_databricks.plugins.plugin.DatabricksHook")
-def test_databricks_job_run_link(mock_hook, mock_xcom, mock_get_airflow_app, mock_dag):
+@patch("astro_databricks.plugins.plugin.get_task_group")
+def test_databricks_job_run_link(
+    mock_get_task_group, mock_hook, mock_xcom, mock_get_airflow_app, mock_dag
+):
     mock_dag_bag = MagicMock()
     mock_dag_bag.get_dag.return_value = mock_dag
     mock_get_airflow_app.return_value.dag_bag = mock_dag_bag
@@ -92,6 +95,9 @@ def test_databricks_job_run_link(mock_hook, mock_xcom, mock_get_airflow_app, moc
     )
 
     mock_hook.return_value.host = "test_host"
+    mock_get_task_group.return_value.get_child_by_label.return_value.task_id = (
+        "test_group.launch"
+    )
 
     link = DatabricksJobRunLink()
     operator = MagicMock(
