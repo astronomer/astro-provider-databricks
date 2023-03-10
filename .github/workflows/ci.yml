@@ -72,37 +72,6 @@ jobs:
           name: coverage-${{ matrix.python }}-${{ matrix.airflow }}
           path: ./.coverage
 
-  Code-Coverage:
-    if: github.event.action != 'labeled'
-    needs:
-      - Run-Unit-Tests
-      - Run-Example-DAGs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v3
-        with:
-          python-version: 3.8
-      - name: Install coverage
-        run: |
-          pip3 install coverage
-      - name: Download all artifacts
-        uses: actions/download-artifact@v2
-        with:
-          path: ./coverage
-      - name: Run coverage
-        run: |
-          coverage combine ./coverage/coverage*/.coverage
-          coverage report
-          coverage xml
-      - name: Upload coverage
-        uses: codecov/codecov-action@v2
-        with:
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
-
   Run-Example-DAGs:
     if: >-
       github.event_name == 'push' ||
@@ -147,3 +116,34 @@ jobs:
     env:
       DATABRICKS_CONN_TOKEN: ${{ secrets.DATABRICKS_CONN_TOKEN }}
       DATABRICKS_CONN_HOST: https://dbc-9c390870-65ef.cloud.databricks.com/
+
+  Code-Coverage:
+    if: github.event.action != 'labeled'
+    needs:
+      - Run-Unit-Tests
+      - Run-Example-DAGs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
+      - name: Install coverage
+        run: |
+          pip3 install coverage
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: ./coverage
+      - name: Run coverage
+        run: |
+          coverage combine ./coverage/coverage*/.coverage
+          coverage report
+          coverage xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
