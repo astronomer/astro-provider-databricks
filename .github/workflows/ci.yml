@@ -33,7 +33,7 @@ jobs:
         with:
           config-file: '.github/workflows/mlc_config.json'
 
-# TODO: Fix Type-check failures
+# TODO: Fix Type-check failures ticket: https://github.com/astronomer/astro-providers-databricks/issues/5
   Type-Check:
     if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
