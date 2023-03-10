@@ -16,7 +16,7 @@
 
 
 **Astro Databricks** is an [Apache Airflow](https://github.com/apache/airflow) provider created by [Astronomer](https://www.astronomer.io/) for an **optimal Databricks experience**.  With the `DatabricksTaskGroup`, Astro Datatricks allows you to run from Databricks workflows without
-the need of running Jobs individually, which can result in **75% cost reduction**.
+the need of running Jobs individually, which can result in [75% cost reduction](https://www.databricks.com/product/aws-pricing).
 
 ## Prerequisites
 
