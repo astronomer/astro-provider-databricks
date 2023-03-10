@@ -78,7 +78,7 @@ def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
     session.install("-e", ".[all,tests]")
     session.run("mypy", "--version")
-    session.run("mypy", "cosmos")
+    session.run("mypy", "src")
 
 
 @nox.session(python="3.9")

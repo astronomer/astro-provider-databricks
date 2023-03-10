@@ -44,6 +44,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+docs =[
+    "sphinx",
+    "sphinx-autobuild",
+    "sphinx-tabs"
+]
 tests = [
     "pytest>=6.0",
     "pytest-split",

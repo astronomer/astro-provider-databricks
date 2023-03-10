@@ -80,7 +80,7 @@ def test_clear_task_instances(
 @patch("astro_databricks.plugins.plugin.get_airflow_app")
 @patch("astro_databricks.plugins.plugin.XCom.get_value")
 @patch("astro_databricks.plugins.plugin.DatabricksHook")
-@patch("cosmos.providers.databricks.plugin.get_task_group")
+@patch("astro_databricks.plugins.plugin.get_task_group")
 def test_databricks_job_run_link(
     mock_get_task_group, mock_hook, mock_xcom, mock_get_airflow_app, mock_dag
 ):
