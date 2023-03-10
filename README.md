@@ -64,7 +64,7 @@ airflow connections add 'databricks_conn' \
    
    https://github.com/astronomer/astro-providers-databricks/blob/45897543a5e34d446c84b3fbc4f6f7a3ed16cdf7/example_dags/example_databricks_workflow.py#L48-L101
 
-   Alternatively, you can download `calculate_popular_movies.py`
+   Alternatively, you can download `example_databricks_workflow.py`
    ```shell
     curl -O https://raw.githubusercontent.com/astronomer/astro-providers-databricks/main/example_dags/example_databricks_workflow.py
    ```
