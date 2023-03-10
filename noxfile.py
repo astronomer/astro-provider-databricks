@@ -37,7 +37,7 @@ def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     env = {
         "AIRFLOW_HOME": f"~/airflow-{airflow}-python-{session.python}",
-        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.* cosmos\\.*",
+        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.* astro_databricks\\.*",
     }
 
     session.install("-e", ".[all,tests]")
