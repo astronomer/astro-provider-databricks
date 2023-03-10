@@ -2,11 +2,10 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-# TODO: change the name of the package
 [project]
 name = "astro-providers-databricks"
 dynamic = ["version"]
-description = "Astronomer SDK Template"
+description = "Affordable Databricks Workflows in Apache Airflow"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.7"
@@ -64,8 +63,8 @@ tests = [
 
 # TODO: change the name of the package
 [project.urls]
-Homepage = "https://github.com/astronomer/astronomer-sdk-template"
-Documentation = "https://github.com/astronomer/astronomer-sdk-template"
+Homepage = "https://github.com/astronomer/astro-providers-databricks/"
+Documentation = "https://github.com/astronomer/astro-providers-databricks/"
 
 [tool.hatch.version]
 path = "src/astro_databricks/__init__.py"
@@ -108,7 +107,7 @@ fix = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-s --cov=src --cov-branch --cov-report term-missing"
+addopts = "--cov=src --cov-branch --cov-report term-missing"
 testpaths = [
     "tests",
 ]
