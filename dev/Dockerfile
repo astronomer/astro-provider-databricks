@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ./pyproject.toml  ${AIRFLOW_HOME}/astro_databricks/
 # The following file are needed because version they are referenced from pyproject.toml
 COPY ./README.md  ${AIRFLOW_HOME}/astro_databricks/
-COPY ./src/astro_databricks/__init__.py  ${AIRFLOW_HOME}/astro_databricks/src/astro_databricks/__init__.py
+COPY ./src/astro_databricks/  ${AIRFLOW_HOME}/astro_databricks/src/astro_databricks/
 
 RUN ls -l ${AIRFLOW_HOME}/astro_databricks/
 RUN pip install -e "${AIRFLOW_HOME}/astro_databricks"
