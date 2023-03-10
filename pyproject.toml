@@ -108,7 +108,7 @@ fix = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--tb=short --cov=src --cov-report=xml --import-mode=importlib"
+addopts = "--cov=src --cov-branch --cov-report term-missing"
 testpaths = [
     "tests",
 ]

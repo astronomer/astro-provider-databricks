@@ -114,11 +114,11 @@ jobs:
           key: unit-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('pyproject.toml') }}-version-${{ hashFiles('src/astro_databricks/__init__.py') }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- tests/ --ignore "tests/test_example_dags.py" --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- --ignore "tests/test_example_dags.py" --cov-report=xml
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
-          name: coverage-${{ matrix.python }}-${{ matrix.airflow }}
+          name: coverage-unit-tests-${{ matrix.python }}-${{ matrix.airflow }}
           path: ./.coverage
 
   Run-Example-DAGs:
@@ -164,7 +164,12 @@ jobs:
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: DATABRICKS_GROUP_ID="${{github.run_id}}_${{matrix.python}}_${{matrix.airflow}}" nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- "tests/test_example_dags.py"
+      - run: DATABRICKS_GROUP_ID="${{github.run_id}}_${{matrix.python}}_${{matrix.airflow}}" nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- "tests/test_example_dags.py" --cov-report=xml
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-example-dags-${{ matrix.python }}-${{ matrix.airflow }}
+          path: ./.coverage
     env:
       DATABRICKS_CONN_TOKEN: ${{ secrets.DATABRICKS_CONN_TOKEN }}
       DATABRICKS_CONN_HOST: https://dbc-9c390870-65ef.cloud.databricks.com/
