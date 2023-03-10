@@ -12,11 +12,11 @@ from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 
 from astro_databricks.constants import JOBS_API_VERSION
+from astro_databricks.operators.workflow import DatabricksMetaData
 from astro_databricks.plugins.plugin import (
     DatabricksJobRepairSingleFailedLink,
     DatabricksJobRunLink,
 )
-from astro_databricks.operators.workflow import DatabricksMetaData
 
 
 class DatabricksNotebookOperator(BaseOperator):
@@ -93,7 +93,7 @@ class DatabricksNotebookOperator(BaseOperator):
         self.notebook_params = notebook_params or {}
         self.notebook_packages = notebook_packages or []
         self.databricks_conn_id = databricks_conn_id
-        self.databricks_metadata: DatabricksMetaData | None = None
+        self.databricks_metadata: dict | None = None
         self.job_cluster_key = job_cluster_key or ""
         self.new_cluster = new_cluster or {}
         self.existing_cluster_id = existing_cluster_id or ""
@@ -248,6 +248,8 @@ class DatabricksNotebookOperator(BaseOperator):
         ):
             self.launch_notebook_job()
         else:
-            self.databricks_run_id = self.databricks_metadata.databricks_run_id
-            self.databricks_conn_id = self.databricks_metadata.databricks_conn_id
+            # if we are in a workflow, we assume there is a metadata from the launch task
+            databricks_metadata = DatabricksMetaData(**self.databricks_metadata)
+            self.databricks_run_id = databricks_metadata.databricks_run_id
+            self.databricks_conn_id = databricks_metadata.databricks_conn_id
         self.monitor_databricks_job()

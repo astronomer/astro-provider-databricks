@@ -5,7 +5,6 @@ import pytest
 from airflow.exceptions import AirflowException
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import (
-    DatabricksMetaData,
     DatabricksWorkflowTaskGroup,
 )
 
@@ -73,11 +72,11 @@ def test_databricks_notebook_operator_without_taskgroup(mock_monitor, mock_launc
 def test_databricks_notebook_operator_with_taskgroup(
     mock_create, mock_monitor, mock_launch, dag
 ):
-    mock_create.return_value = DatabricksMetaData(
-        databricks_job_id="job_id",
-        databricks_conn_id="conn_id",
-        databricks_run_id="run_id",
-    )
+    mock_create.return_value = {
+        "databricks_job_id": "job_id",
+        "databricks_run_id": "run_id",
+        "databricks_conn_id": "conn_id",
+    }
     with dag:
         task_group = DatabricksWorkflowTaskGroup(
             group_id="test_workflow",
