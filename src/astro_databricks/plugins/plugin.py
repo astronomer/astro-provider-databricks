@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from operator import itemgetter
+from typing import Any
 
 from airflow.configuration import conf
 from airflow.models import BaseOperator, BaseOperatorLink
@@ -237,6 +238,25 @@ def get_task_group(operator):
         task_group = operator.task_group
     return task_group
 
+def get_xcom_result(ti_key: TaskInstanceKey, key: str, ti: TaskInstance | None, ) -> Any:
+    # Pull the xcom result for the given task instance and task instance key
+    try:
+        result = XCom.get_value(
+            ti_key=ti_key,
+            key=key,
+        )
+    except AttributeError:
+        # For Airflow versions < 2.3.0 which do not contain the XCOM.get_value method implementation.
+        if not ti:
+            raise TaskInstanceNotFound("Valid task instance is needed to fetch the XCOM result.")
+        result = XCom.get_one(
+            task_id=ti_key.task_id,
+            dag_id=ti_key.dag_id,
+            execution_date=ti.execution_date,
+            key=key,
+        )
+    return result
+
 
 class DatabricksJobRunLink(BaseOperatorLink, LoggingMixin):
     """Constructs a link to monitor a Databricks Job Run."""
@@ -266,20 +286,7 @@ class DatabricksJobRunLink(BaseOperatorLink, LoggingMixin):
             launch_task_id = task_group.get_child_by_label("launch").task_id
             ti_key = _get_launch_task_key(ti_key, task_id=launch_task_id)
         # Should we catch the exception here if there is no return value?
-        try:
-            metadata = XCom.get_value(
-                ti_key=ti_key,
-                key="return_value",
-            )
-        except AttributeError:
-            if not ti:
-                raise TaskInstanceNotFound()
-            metadata = XCom.get_one(
-                task_id=ti_key.task_id,
-                dag_id=ti_key.dag_id,
-                execution_date=ti.execution_date,
-                key="return_value",
-            )
+        metadata = get_xcom_result(ti_key, "return_value", ti)
 
         hook = DatabricksHook(metadata.databricks_conn_id)
         return f"https://{hook.host}/#job/{metadata.databricks_job_id}/run/{metadata.databricks_run_id}"
@@ -307,20 +314,7 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
             task_group.group_id,
         )
         # Should we catch the exception here if there is no return value?
-        try:
-            metadata = XCom.get_value(
-                ti_key=ti_key,
-                key="return_value",
-            )
-        except AttributeError:
-            if not ti:
-                raise TaskInstanceNotFound()
-            metadata = XCom.get_one(
-                task_id=ti_key.task_id,
-                dag_id=ti_key.dag_id,
-                execution_date=ti.execution_date,
-                key="return_value",
-            )
+        metadata = get_xcom_result(ti_key, "return_value", ti)
 
         tasks_str = self.get_tasks_to_run(ti_key, operator, self.log)
         self.log.debug("tasks to rerun: %s", tasks_str)
@@ -402,21 +396,7 @@ class DatabricksJobRepairSingleFailedLink(BaseOperatorLink, LoggingMixin):
         if ".launch" not in ti_key.task_id:
             launch_task_id = task_group.get_child_by_label("launch").task_id
             ti_key = _get_launch_task_key(ti_key, task_id=launch_task_id)
-        try:
-            metadata = XCom.get_value(
-                ti_key=ti_key,
-                key="return_value",
-            )
-
-        except AttributeError:
-            if not ti:
-                raise TaskInstanceNotFound()
-            metadata = XCom.get_one(
-                task_id=ti_key.task_id,
-                dag_id=ti_key.dag_id,
-                execution_date=ti.execution_date,
-                key="return_value",
-            )
+        metadata = get_xcom_result(ti_key, "return_value", ti)
 
         return (
             f"/repair_databricks_job?dag_id={ti_key.dag_id}&"

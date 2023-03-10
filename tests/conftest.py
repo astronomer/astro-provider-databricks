@@ -4,7 +4,7 @@ from airflow.models import DAG
 try:
     from airflow.operators.empty import EmptyOperator
 except ModuleNotFoundError:
-    # For older versions of Airflow which do not contain the EmptyOperator.
+    # For Airflow versions < 2.3 which do not contain the EmptyOperator.
     from airflow.operators.dummy import DummyOperator as EmptyOperator
 
 from airflow.utils.timezone import datetime
