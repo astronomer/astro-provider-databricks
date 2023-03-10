@@ -23,7 +23,7 @@ env:
   CI_ENABLED: true
 
 jobs:
-  Markdown-link-check:
+  Markdown-Link-Check:
     if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
