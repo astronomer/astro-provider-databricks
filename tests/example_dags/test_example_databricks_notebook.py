@@ -57,6 +57,5 @@ with dag:
             {"pypi": {"package": "Faker"}},
         ],
         source="WORKSPACE",
-        job_cluster_key=str(uuid.uuid4()),
         new_cluster=NEW_CLUSTER_SPEC,
     )
