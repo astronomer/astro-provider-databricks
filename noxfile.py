@@ -32,17 +32,26 @@ def _expand_env_vars(file_path: Path):
 
 
 @nox.session(python=["3.8", "3.9", "3.10"])
-@nox.parametrize("airflow", ["2.4", "2.5"])
+@nox.parametrize("airflow", ["2.2.4", "2.3", "2.4", "2.5"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
-    session.run("echo", "$PWD")
     env = {
         "AIRFLOW_HOME": f"~/airflow-{airflow}-python-{session.python}",
-        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.* cosmos\\.*",
+        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.* astro_databricks\\.*",
     }
 
-    session.install(f"apache-airflow=={airflow}")
     session.install("-e", ".[all,tests]")
+    session.install(f"apache-airflow=={airflow}")
+
+    # Starting with Airflow 2.0.0, the pickle type for XCom messages has been replaced to JSON by default to prevent
+    # RCE attacks and the default value for `[core] enable_xom_pickling` has been set to False.
+    # Read more here: http://apache-airflow-docs.s3-website.eu-central-1.amazonaws.com/docs/apache-airflow/latest/release_notes.html#the-default-value-for-core-enable-xcom-pickling-has-been-changed-to-false.
+    # However, serialization of objects that contain attr, dataclass or custom serializer into JSON got supported only
+    # after Airflow 2.5.0 with the inclusion of PR: https://github.com/apache/airflow/pull/27540 and hence, for older
+    # versions of Airflow we enable pickling to support serde of such objects that the Databricks tasks push to
+    # XCOM (e.g. DatabricksMetaData).
+    if airflow in ("2.2.4", "2.3", "2.4"):
+        env["AIRFLOW__CORE__ENABLE_XCOM_PICKLING"] = "True"
 
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
@@ -69,7 +78,7 @@ def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
     session.install("-e", ".[all,tests]")
     session.run("mypy", "--version")
-    session.run("mypy", "cosmos")
+    session.run("mypy", "src")
 
 
 @nox.session(python="3.9")

@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import logging
 from operator import itemgetter
+from typing import Any
 
+from airflow.configuration import conf
 from airflow.models import BaseOperator, BaseOperatorLink
 from airflow.models.dag import DAG, clear_task_instances
 from airflow.models.dagrun import DagRun
@@ -12,15 +14,36 @@ from airflow.models.xcom import XCom
 from airflow.plugins_manager import AirflowPlugin
 from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.security import permissions
-from airflow.utils.airflow_flask_app import get_airflow_app
+from airflow.version import version as airflow_version
+from packaging import version
+
+try:
+    # The following utility was included in Airflow version 2.3.3; we handle the needed import in the exception block.
+    from airflow.utils.airflow_flask_app import get_airflow_app
+except ModuleNotFoundError:
+    # For older versions of airflow < 2.3.3 that don't have the utility.
+    from flask import current_app
+
+from airflow.exceptions import TaskInstanceNotFound
 from airflow.utils.log.logging_mixin import LoggingMixin
-from airflow.utils.session import provide_session
+from airflow.utils.session import NEW_SESSION, provide_session
+from airflow.utils.task_group import TaskGroup
 from airflow.www.auth import has_access
 from airflow.www.views import AirflowBaseView
 from databricks_cli.sdk import JobsService
 from databricks_cli.sdk.api_client import ApiClient
 from flask import flash, redirect, request
 from flask_appbuilder.api import expose
+from sqlalchemy.orm.session import Session
+
+
+def _get_flask_app():
+    """Get the Airflow flask app instance"""
+    try:
+        flask_app = get_airflow_app()
+    except NameError:
+        flask_app = current_app
+    return flask_app
 
 
 def _get_databricks_task_id(task: BaseOperator) -> str:
@@ -74,8 +97,8 @@ def _get_dagrun(dag: DAG, run_id, session=None) -> DagRun:
 def _clear_task_instances(
     dag_id: str, run_id: str, task_ids: list[str], log: logging.Logger, session=None
 ):
-    dag = get_airflow_app().dag_bag.get_dag(dag_id)
-    log.debug("task_ids to clear", task_ids)
+    dag = _get_flask_app().dag_bag.get_dag(dag_id)
+    log.debug("task_ids to clear", str(task_ids))
     dr: DagRun = _get_dagrun(dag, run_id)
     tis_to_clear = [
         ti for ti in dr.get_task_instances() if _get_databricks_task_id(ti) in task_ids
@@ -141,16 +164,98 @@ def _repair_task(
     )
 
 
-def _get_launch_task_key(current_task_key: TaskInstanceKey, group_id: str):
-    if group_id:
+def get_task_group_legacy(operator: BaseOperator) -> TaskGroup:
+    """
+    Returns the task group for a given operator. This is a workaround for Airflow 2.2.4.
+    Unfortunately in Airflow 2.2.4 the task_group property is not set on the operator, so we
+    have to get the taskgroup tree from the DAG and search for the operator. This allows us to
+    return the operators group, so we can find the xcom result of the launch task.
+
+    :param operator: The operator to get the task group for.
+    :return: The task group for the given operator.
+    """
+
+    def find_my_group(group: TaskGroup, task_id: str):
+        groups_to_recurse = set()
+        for elem in group.children.values():
+            if isinstance(elem, TaskGroup):
+                groups_to_recurse.add(elem)
+            else:
+                if operator.task_id == task_id:
+                    return group
+        for group in groups_to_recurse:
+            val = find_my_group(group, task_id)
+            if val:
+                return val
+
+    return find_my_group(operator.dag.task_group, operator.task_id)
+
+
+def _get_launch_task_key(
+    current_task_key: TaskInstanceKey, task_id: str
+) -> TaskInstanceKey:
+    """
+    Returns the task key for the launch task. This allows us to gather databricks Metadata
+    even if the current task has failed (since tasks only create xcom values if they succeed).
+
+    :param current_task_key: The task key for the current task.
+    :param task_id: The task ID for the current task.
+    :return: The task key for the launch task.
+    """
+    if task_id:
         return TaskInstanceKey(
             dag_id=current_task_key.dag_id,
-            task_id=group_id + ".launch",
+            task_id=task_id,
             run_id=current_task_key.run_id,
             try_number=current_task_key.try_number,
         )
     else:
         return current_task_key
+
+
+@provide_session
+def get_task_instance(operator, dttm, session: Session = NEW_SESSION):
+    dag_id = operator.dag.dag_id
+    dag_run = DagRun.find(dag_id, execution_date=dttm)[0]
+    ti = (
+        session.query(TaskInstance)
+        .filter(
+            TaskInstance.dag_id == dag_id,
+            TaskInstance.run_id == dag_run.run_id,
+            TaskInstance.task_id == operator.task_id,
+        )
+        .one_or_none()
+    )
+    if not ti:
+        raise TaskInstanceNotFound("Task instance not found")
+    return ti
+
+
+def get_task_group(operator):
+    if not hasattr(operator, "task_group"):
+        task_group = get_task_group_legacy(operator)
+    else:
+        task_group = operator.task_group
+    return task_group
+
+def get_xcom_result(ti_key: TaskInstanceKey, key: str, ti: TaskInstance | None, ) -> Any:
+    # Pull the xcom result for the given task instance and task instance key
+    try:
+        result = XCom.get_value(
+            ti_key=ti_key,
+            key=key,
+        )
+    except AttributeError:
+        # For Airflow versions < 2.3.0 which do not contain the XCOM.get_value method implementation.
+        if not ti:
+            raise TaskInstanceNotFound("Valid task instance is needed to fetch the XCOM result.")
+        result = XCom.get_one(
+            task_id=ti_key.task_id,
+            dag_id=ti_key.dag_id,
+            execution_date=ti.execution_date,
+            key=key,
+        )
+    return result
 
 
 class DatabricksJobRunLink(BaseOperatorLink, LoggingMixin):
@@ -165,19 +270,24 @@ class DatabricksJobRunLink(BaseOperatorLink, LoggingMixin):
         *,
         ti_key: TaskInstanceKey | None = None,
     ) -> str:
-        dag = get_airflow_app().dag_bag.get_dag(ti_key.dag_id)
+        ti = None
+        if not ti_key:
+            ti = get_task_instance(operator, dttm)
+            ti_key = ti.key
+        task_group = get_task_group(operator)
+
+        dag = _get_flask_app().dag_bag.get_dag(ti_key.dag_id)
         dag.get_task(ti_key.task_id)
         self.log.info("Getting link for task %s", ti_key.task_id)
         if ".launch" not in ti_key.task_id:
             self.log.debug(
                 "Finding the launch task for job run metadata %s", ti_key.task_id
             )
-            ti_key = _get_launch_task_key(ti_key, group_id=operator.task_group.group_id)
+            launch_task_id = task_group.get_child_by_label("launch").task_id
+            ti_key = _get_launch_task_key(ti_key, task_id=launch_task_id)
         # Should we catch the exception here if there is no return value?
-        metadata = XCom.get_value(
-            ti_key=ti_key,
-            key="return_value",
-        )
+        metadata = get_xcom_result(ti_key, "return_value", ti)
+
         hook = DatabricksHook(metadata.databricks_conn_id)
         return f"https://{hook.host}/#job/{metadata.databricks_job_id}/run/{metadata.databricks_run_id}"
 
@@ -194,15 +304,18 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
         *,
         ti_key: TaskInstanceKey | None = None,
     ) -> str:
+        ti = None
+        if not ti_key:
+            ti = get_task_instance(operator, dttm)
+            ti_key = ti.key
+        task_group = get_task_group(operator)
         self.log.debug(
             "Creating link to repair all tasks for databricks job run %s",
-            operator.task_group.group_id,
+            task_group.group_id,
         )
         # Should we catch the exception here if there is no return value?
-        metadata = XCom.get_value(
-            ti_key=ti_key,
-            key="return_value",
-        )
+        metadata = get_xcom_result(ti_key, "return_value", ti)
+
         tasks_str = self.get_tasks_to_run(ti_key, operator, self.log)
         self.log.debug("tasks to rerun: %s", tasks_str)
         return (
@@ -216,23 +329,24 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
     def get_tasks_to_run(
         self, ti_key: TaskInstanceKey, operator: BaseOperator, log: logging.Logger
     ) -> str:
-        dag = get_airflow_app().dag_bag.get_dag(ti_key.dag_id)
+        task_group = get_task_group(operator)
+        dag = _get_flask_app().dag_bag.get_dag(ti_key.dag_id)
         dr = _get_dagrun(dag, ti_key.run_id)
         log.debug("Getting failed and skipped tasks for dag run %s", dr.run_id)
         failed_and_skipped_tasks = self._get_failed_and_skipped_tasks(dr)
         log.debug("Failed and skipped tasks: %s", failed_and_skipped_tasks)
         tasks_to_run = {
             ti: t
-            for ti, t in operator.task_group.children.items()
+            for ti, t in task_group.children.items()
             if ti in failed_and_skipped_tasks
         }
         log.debug(
             "Tasks to repair in databricks job %s : %s",
-            operator.task_group.group_id,
+            task_group.group_id,
             tasks_to_run,
         )
         tasks_str = ",".join(
-            get_databricks_task_ids(operator.task_group.group_id, tasks_to_run, log)
+            get_databricks_task_ids(task_group.group_id, tasks_to_run, log)
         )
         return tasks_str
 
@@ -251,14 +365,6 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
             )
         ]
 
-    @provide_session
-    def get_ti(self, ti_key: TaskInstanceKey, session=None) -> TaskInstance:
-        return (
-            session.query(TaskInstance)
-            .where(TaskInstance.filter_for_tis([ti_key]))
-            .one()
-        )
-
 
 class DatabricksJobRepairSingleFailedLink(BaseOperatorLink, LoggingMixin):
     """Constructs a link to send a repair request for a single databricks task."""
@@ -272,20 +378,25 @@ class DatabricksJobRepairSingleFailedLink(BaseOperatorLink, LoggingMixin):
         *,
         ti_key: TaskInstanceKey | None = None,
     ) -> str:
+        ti = None
+        if not ti_key:
+            ti = get_task_instance(operator, dttm)
+            ti_key = ti.key
+
+        task_group = get_task_group(operator)
+
         self.log.info(
             "Creating link to repair a single task for databricks job run %s task %s",
-            operator.task_group.group_id,
+            task_group.group_id,
             ti_key.task_id,
         )
-        dag = get_airflow_app().dag_bag.get_dag(ti_key.dag_id)
+        dag = _get_flask_app().dag_bag.get_dag(ti_key.dag_id)
         task = dag.get_task(ti_key.task_id)
         # Should we catch the exception here if there is no return value?
         if ".launch" not in ti_key.task_id:
-            ti_key = _get_launch_task_key(ti_key, group_id=operator.task_group.group_id)
-        metadata = XCom.get_value(
-            ti_key=ti_key,
-            key="return_value",
-        )
+            launch_task_id = task_group.get_child_by_label("launch").task_id
+            ti_key = _get_launch_task_key(ti_key, task_id=launch_task_id)
+        metadata = get_xcom_result(ti_key, "return_value", ti)
 
         return (
             f"/repair_databricks_job?dag_id={ti_key.dag_id}&"
@@ -309,9 +420,15 @@ class RepairDatabricksTasks(AirflowBaseView, LoggingMixin):
         databricks_conn_id, databricks_run_id, dag_id, tasks_to_repair = itemgetter(
             "databricks_conn_id", "databricks_run_id", "dag_id", "tasks_to_repair"
         )(request.values)
+        view = conf.get("webserver", "dag_default_view")
+        return_url = self._get_return_url(dag_id, view)
         run_id = request.values.get("run_id").replace(
             " ", "+"
         )  # get run id separately since we need to modify it
+        if tasks_to_repair == "":
+            # If there are no tasks to repair, we return.
+            flash("No tasks to repair. Not sending repair request.")
+            return redirect(return_url)
         self.log.info("Repairing databricks job %s", databricks_run_id)
         res = _repair_task(
             databricks_conn_id=databricks_conn_id,
@@ -325,7 +442,15 @@ class RepairDatabricksTasks(AirflowBaseView, LoggingMixin):
         self.log.info("Clearing tasks to rerun in airflow")
         _clear_task_instances(dag_id, run_id, tasks_to_repair.split(","), self.log)
         flash(f"Databricks repair job is starting!: {res}")
-        return redirect(f"/dags/{dag_id}/grid")
+        return redirect(return_url)
+
+    @staticmethod
+    def _get_return_url(dag_id, view):
+        if version.parse(airflow_version) < version.parse("2.3.0"):
+            return_url = f"/{view}?dag_id={dag_id}"
+        else:
+            return_url = f"/dags/{dag_id}/{view}"
+        return return_url
 
 
 repair_databricks_view = RepairDatabricksTasks()
