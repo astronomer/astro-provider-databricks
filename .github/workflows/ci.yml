@@ -23,7 +23,6 @@ env:
   CI_ENABLED: true
 
 jobs:
-# TODO: Fix Markdown-link-check failures
   Markdown-link-check:
     if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
