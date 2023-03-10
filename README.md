@@ -20,8 +20,8 @@ the need of running Jobs individually, which can result in **75% cost reduction*
 
 ## Prerequisites
 
-* Apache Airflow >= 2.2
-* Python >= 3.7
+* Apache Airflow >= 2.2.4
+* Python >= 2.7
 * Databricks account
 * Previously created Databricks Notebooks
 
@@ -43,12 +43,11 @@ pip install astro-providers-databricks
 
     ```shell
     export AIRFLOW_HOME=`pwd`
-    export AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro_databricks\\.*"
    
     airflow db init
     ```
    
-4. [Create](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html) a Databricks Airflow connection (so Airflow can access Databricks using your credentials). This can be done by running the following command, replacing the login and password (with your access token):
+4. [Create using your preferred way](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html) a Databricks Airflow connection (so Airflow can access Databricks using your credentials). This can be done by running the following command, replacing the login and password (with your access token):
 
 ```shell
 airflow connections add 'databricks_conn' \
