@@ -1,6 +1,5 @@
 """Example DAG for using the DatabricksNotebookOperator."""
 import os
-import uuid
 from datetime import timedelta
 
 from airflow.models.dag import DAG
