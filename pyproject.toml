@@ -36,7 +36,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "apache-airflow>=2.2.5",
+    "apache-airflow>=2.2.4",
     "databricks-sql-connector>=2.0.4;python_version>='3.10'",
     "databricks-cli",
     "apache-airflow-providers-databricks>=2.2.0",
