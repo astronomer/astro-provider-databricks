@@ -238,7 +238,12 @@ def get_task_group(operator):
         task_group = operator.task_group
     return task_group
 
-def get_xcom_result(ti_key: TaskInstanceKey, key: str, ti: TaskInstance | None, ) -> Any:
+
+def get_xcom_result(
+    ti_key: TaskInstanceKey,
+    key: str,
+    ti: TaskInstance | None,
+) -> Any:
     # Pull the xcom result for the given task instance and task instance key
     try:
         result = XCom.get_value(
@@ -248,14 +253,18 @@ def get_xcom_result(ti_key: TaskInstanceKey, key: str, ti: TaskInstance | None, 
     except AttributeError:
         # For Airflow versions < 2.3.0 which do not contain the XCOM.get_value method implementation.
         if not ti:
-            raise TaskInstanceNotFound("Valid task instance is needed to fetch the XCOM result.")
+            raise TaskInstanceNotFound(
+                "Valid task instance is needed to fetch the XCOM result."
+            )
         result = XCom.get_one(
             task_id=ti_key.task_id,
             dag_id=ti_key.dag_id,
             execution_date=ti.execution_date,
             key=key,
         )
-    return result
+    from astro_databricks.operators.workflow import DatabricksMetaData
+
+    return DatabricksMetaData(**result)
 
 
 class DatabricksJobRunLink(BaseOperatorLink, LoggingMixin):
