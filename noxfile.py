@@ -7,10 +7,6 @@ import nox
 nox.options.sessions = ["dev"]
 nox.options.reuse_existing_virtualenvs = True
 
-os.environ[
-    "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"
-] = "airflow.* astro.* cosmos.*"
-
 
 @nox.session(python="3.10")
 def dev(session: nox.Session) -> None:
@@ -20,7 +16,7 @@ def dev(session: nox.Session) -> None:
     development environment to ``.nox/dev``.
     """
     session.install("nox")
-    session.install("-e", ".[all,tests]")
+    session.install("-e", ".[tests]")
 
 
 def _expand_env_vars(file_path: Path):
@@ -40,18 +36,8 @@ def test(session: nox.Session, airflow) -> None:
         "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.* astro_databricks\\.*",
     }
 
-    session.install("-e", ".[all,tests]")
+    session.install("-e", ".[tests]")
     session.install(f"apache-airflow=={airflow}")
-
-    # Starting with Airflow 2.0.0, the pickle type for XCom messages has been replaced to JSON by default to prevent
-    # RCE attacks and the default value for `[core] enable_xom_pickling` has been set to False.
-    # Read more here: http://apache-airflow-docs.s3-website.eu-central-1.amazonaws.com/docs/apache-airflow/latest/release_notes.html#the-default-value-for-core-enable-xcom-pickling-has-been-changed-to-false.
-    # However, serialization of objects that contain attr, dataclass or custom serializer into JSON got supported only
-    # after Airflow 2.5.0 with the inclusion of PR: https://github.com/apache/airflow/pull/27540 and hence, for older
-    # versions of Airflow we enable pickling to support serde of such objects that the Databricks tasks push to
-    # XCOM (e.g. DatabricksMetaData).
-    if airflow in ("2.2.4", "2.3", "2.4"):
-        env["AIRFLOW__CORE__ENABLE_XCOM_PICKLING"] = "True"
 
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
@@ -76,7 +62,7 @@ def test(session: nox.Session, airflow) -> None:
 @nox.session(python=["3.8"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
-    session.install("-e", ".[all,tests]")
+    session.install("-e", ".[tests]")
     session.run("mypy", "--version")
     session.run("mypy", "src")
 

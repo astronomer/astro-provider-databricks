@@ -164,7 +164,7 @@ def test_create_workflow_with_arbitrary_extra_job_params(
             "on_start": ["user.name@databricks.com"],
         },
         "git_source": {  # no default value
-            "git_url": "https://github.com/astronomer/astronomer-cosmos",
+            "git_url": "https://github.com/astronomer/astro-providers-databricks",
             "git_provider": "gitHub",
             "git_branch": "main",
         },
