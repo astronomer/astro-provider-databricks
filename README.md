@@ -2,7 +2,7 @@
   Astro Databricks
 </h1>
   <h3 align="center">
-  Databricks Workflows in Apache Airflow made cheaper<br><br>
+  Affordable Databricks Workflows in Apache Airflow<br><br>
 </h3>
 
 [![Python versions](https://img.shields.io/pypi/pyversions/astro-providers-databricks.svg)](https://pypi.org/pypi/astro-providers-databricks)
@@ -33,11 +33,13 @@ pip install astro-providers-databricks
 
 ## Quickstart
 
-1. Either use pre-existing or create two simple [Databricks Notebook](https://docs.databricks.com/notebooks/).
+1. Use pre-existing or create two simple [Databricks Notebooks](https://docs.databricks.com/notebooks/). Their identifiers will be used in step (5). The original example DAG uses: 
+   * `Shared/Notebook_1`
+   * `Shared/Notebook_2`
 
-TODO: add screenshot
+2. Generate a [Databricks Personal Token](https://docs.databricks.com/dev-tools/auth.html#databricks-personal-access-tokens). This will be used in step (6). 
 
-2. Ensure that your Airflow environment is set up correctly by running the following commands:
+3. Ensure that your Airflow environment is set up correctly by running the following commands:
 
     ```shell
     export AIRFLOW_HOME=`pwd`
@@ -46,19 +48,39 @@ TODO: add screenshot
     airflow db init
     ```
    
-3. Create a Databricks connection
+4. [Create](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html) a Databricks Airflow connection (so Airflow can access Databricks using your credentials). This can be done by running the following command, replacing the login and password (with your access token):
 
-TODO
+```shell
+airflow connections add 'databricks_conn' \
+    --conn-json '{
+        "conn_type": "databricks",
+        "login": "some.email@yourcompany.com",
+        "host": "https://dbc-c9390870-65ef.cloud.databricks.com/",
+        "password": "personal-access-token"
+    }'
+```
 
-4. Run your workflow locally by using Airflow
-
-TODO
+5. Copy the following workflow into a file named `example_databricks_workflow.py` and add it to the `dags` directory of your Airflow project:
    
+   https://github.com/astronomer/astro-providers-databricks/blob/45897543a5e34d446c84b3fbc4f6f7a3ed16cdf7/example_dags/example_databricks_workflow.py#L48-L101
+
+   Alternatively, you can download `calculate_popular_movies.py`
+   ```shell
+    curl -O https://raw.githubusercontent.com/astronomer/astro-providers-databricks/main/example_dags/example_databricks_workflow.py
+   ```
+
+6. Run the example DAG:
+
+    ```sh
+    airflow dags test example_databricks_workflow `date -Iseconds`
+    ```
+   
+This will create a Databricks Workflow with two Notebook jobs.
 
 ## Available features
 
 * `DatabricksWorkflowTaskGroup`: Airflow [task group](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html#taskgroups) that allows users to create a [Databricks Workflow](https://www.databricks.com/product/workflows).
-* `DatabricksNotebookOperator`: Airflow [operator](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/operators.html) which abstracts a pre-existing [Databricks Notebook](https://docs.databricks.com/notebooks/). Can be used independently to run the Notebook, or within a Databricks Workfow Task Group.
+* `DatabricksNotebookOperator`: Airflow [operator](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/operators.html) which abstracts a pre-existing [Databricks Notebook](https://docs.databricks.com/notebooks/). Can be used independently to run the Notebook, or within a Databricks Workflow Task Group.
 * `AstroDatabricksPlugin`: An Airflow [plugin](https://airflow.apache.org/docs/apache-airflow/stable/authoring-and-scheduling/plugins.html) which is installed by the default. It allows users, by using the UI, to view a Databricks job and retry running it in case of failure.
 
 ## Documentation
@@ -75,7 +97,7 @@ Astro Databricks follows [semantic versioning](https://semver.org/) for releases
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-Read the [Contribution Guideline](docs/contributing.rst) for a detailed overview on how to contribute.
+Read the [Contribution Guidelines](docs/contributing.rst) for a detailed overview on how to contribute.
 
 Contributors and maintainers should abide by the [Contributor Code of Conduct](CODE_OF_CONDUCT.md).
 
