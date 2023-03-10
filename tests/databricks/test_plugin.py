@@ -13,8 +13,6 @@ from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.utils.dates import days_ago
 from airflow.utils.db import create_session
 from airflow.utils.state import State
-from databricks_cli.sdk.service import JobsService
-
 from astro_databricks.plugins.plugin import (
     DatabricksJobRepairAllFailedLink,
     DatabricksJobRepairSingleFailedLink,
@@ -24,7 +22,7 @@ from astro_databricks.plugins.plugin import (
     _get_databricks_task_id,
     _repair_task,
 )
-from astro_databricks.operators.workflow import DatabricksMetaData
+from databricks_cli.sdk.service import JobsService
 
 
 @pytest.fixture
@@ -88,11 +86,11 @@ def test_databricks_job_run_link(
     mock_dag_bag.get_dag.return_value = mock_dag
     mock_get_airflow_app.return_value.dag_bag = mock_dag_bag
 
-    mock_xcom.return_value = DatabricksMetaData(
-        databricks_conn_id="test_conn",
-        databricks_job_id="test_job",
-        databricks_run_id="test_run",
-    )
+    mock_xcom.return_value = {
+        "databricks_job_id": "test_job",
+        "databricks_run_id": "test_run",
+        "databricks_conn_id": "test_conn",
+    }
 
     mock_hook.return_value.host = "test_host"
     mock_get_task_group.return_value.get_child_by_label.return_value.task_id = (
@@ -142,13 +140,12 @@ def test_repair_all_get_link(mock_xcom, mock_dagrun, mock_dag, mock_session):
         task_id="my_task",
         run_id="run_id",
     )
-    metadata = DatabricksMetaData(
-        databricks_conn_id="databricks_conn",
-        databricks_run_id="run_id",
-        databricks_job_id="job_id",
-    )
+    mock_xcom.get_value.return_value = {
+        "databricks_job_id": "job_id",
+        "databricks_run_id": "run_id",
+        "databricks_conn_id": "databricks_conn",
+    }
 
-    mock_xcom.get_value.return_value = metadata
     link = DatabricksJobRepairAllFailedLink()
 
     link.get_dagrun = MagicMock(return_value=mock_dagrun)
@@ -324,14 +321,15 @@ def test_databricks_job_repair_single_failed_link(mock_get_airflow_app, dag):
     databricks_run_id = "test_run_id"
 
     ti_key = TaskInstanceKey(dag_id, task_id, run_id)
-    metadata = DatabricksMetaData(
-        databricks_conn_id=databricks_conn_id,
-        databricks_run_id=databricks_run_id,
-        databricks_job_id=1234,
-    )
+    metadata = {
+        "databricks_conn_id": databricks_conn_id,
+        "databricks_run_id": databricks_run_id,
+        "databricks_job_id": 1234,
+    }
 
     mock_xcom = MagicMock()
-    mock_xcom.get_one.return_value = metadata
+    mock_xcom.get_value.return_value = metadata
+
     with patch("astro_databricks.plugins.plugin.XCom", mock_xcom):
         link.get_link(mock_task, dttm=None, ti_key=ti_key)
         f"/repair_databricks_job?dag_id={dag_id}&databricks_conn_id={databricks_conn_id}&databricks_run_id={databricks_run_id}&tasks_to_repair={_get_databricks_task_id(mock_task)}"

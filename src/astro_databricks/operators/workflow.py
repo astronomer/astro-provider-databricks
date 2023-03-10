@@ -171,11 +171,11 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
             print("job pending")
             time.sleep(5)
         self.databricks_run_id = run_id
-        return DatabricksMetaData(
-            databricks_conn_id=self.databricks_conn_id,
-            databricks_run_id=run_id,
-            databricks_job_id=job_id,
-        )
+        return {
+            "databricks_conn_id": self.databricks_conn_id,
+            "databricks_job_id": job_id,
+            "databricks_run_id": run_id,
+        }
 
 
 class DatabricksWorkflowTaskGroup(TaskGroup):
