@@ -21,7 +21,7 @@ the need of running Jobs individually, which can result in **75% cost reduction*
 ## Prerequisites
 
 * Apache Airflow >= 2.2
-* Python >= 2.7
+* Python >= 3.7
 * Databricks account
 * Previously created Databricks Notebooks
 
