@@ -21,11 +21,21 @@ __________________________________
 
 Pre-requisites
 **************
-TODO
 
-Local Sandbox
-************
-TODO
+* pre-commmit
+* nox
+
+.. code-block:: bash
+    pip install nox pre-commit
+
+Create within `tests/` a `test-connections.yaml` file, similar to :download:`the CI's <../.github/ci-test-connections.yaml>`_.
+
+
+Run tests
+*****************
+
+.. code-block:: bash
+    nox -s "test-3.8(airflow='2.5')"
 
 Pre-Commit
 ************
@@ -35,10 +45,6 @@ your cloned ``astro-providers-databricks`` directory:
 
 .. code-block:: bash
 
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install -r dev-requirements.txt
-    pip install pre-commit
     pre-commit install
 
 

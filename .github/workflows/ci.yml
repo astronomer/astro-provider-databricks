@@ -112,7 +112,6 @@ jobs:
             ~/.cache/pip
             .nox
           key: unit-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('pyproject.toml') }}-version-${{ hashFiles('src/astro_databricks/__init__.py') }}
-      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- --ignore "tests/test_example_dags.py" --cov-report=xml
       - name: Upload coverage
