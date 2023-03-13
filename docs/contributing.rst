@@ -4,14 +4,14 @@ Contributing Guide
 All contributions, bug reports, bug fixes, documentation improvements, enhancements are welcome.
 
 As contributors and maintainers to this project, you are expected to abide by the
-`Contributor Code of Conduct <https://github.com/astronomer/astro-providers-databricks/blob/main/CODE_OF_CONDUCT.md>`_.
+`Contributor Code of Conduct <https://github.com/astronomer/astro-provider-databricks/blob/main/CODE_OF_CONDUCT.md>`_.
 
 Overview
 ________
 
 To contribute to the **Astro Databricks** project:
 
-#. Please create a `GitHub Issue <https://github.com/astronomer/astro-providers-databricks/issues>`_ describing your contribution
+#. Please create a `GitHub Issue <https://github.com/astronomer/astro-provider-databricks/issues>`_ describing your contribution
 #. Open a feature branch off of the ``main`` branch and create a Pull Request into the ``main`` branch from your feature branch
 #. Link your issue to the pull request
 #. Once developments are complete on your feature branch, request a review and it will be merged once approved.
@@ -41,7 +41,7 @@ Pre-Commit
 ************
 
 We use pre-commit to run a number of checks on the code before committing. To install pre-commit, run the following from
-your cloned ``astro-providers-databricks`` directory:
+your cloned ``astro-provider-databricks`` directory:
 
 .. code-block:: bash
 

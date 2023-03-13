@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "astro-providers-databricks"
+name = "astro-provider-databricks"
 dynamic = ["version"]
 description = "Affordable Databricks Workflows in Apache Airflow"
 readme = "README.md"
@@ -61,10 +61,9 @@ tests = [
     "sqlalchemy-stubs", # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
 ]
 
-# TODO: change the name of the package
 [project.urls]
-Homepage = "https://github.com/astronomer/astro-providers-databricks/"
-Documentation = "https://github.com/astronomer/astro-providers-databricks/"
+Homepage = "https://github.com/astronomer/astro-provider-databricks/"
+Documentation = "https://github.com/astronomer/astro-provider-databricks/"
 
 [tool.hatch.version]
 path = "src/astro_databricks/__init__.py"
