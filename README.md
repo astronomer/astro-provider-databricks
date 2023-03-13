@@ -2,7 +2,7 @@
   Astro Databricks
 </h1>
   <h3 align="center">
-  Affordable Databricks Workflows in Apache Airflow<br><br>
+  Orchestrate your Databricks notebooks in Airflow and execute them as Databricks Workflows<br><br>
 </h3>
 
 [![Python versions](https://img.shields.io/pypi/pyversions/astro-provider-databricks.svg)](https://pypi.org/pypi/astro-provider-databricks)
@@ -15,8 +15,7 @@
 [![codecov](https://codecov.io/gh/astronomer/astro-provider-databricks/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astronomer/astro-provider-databricks)
 
 
-**Astro Databricks** is an [Apache Airflow](https://github.com/apache/airflow) provider created by [Astronomer](https://www.astronomer.io/) for an **optimal Databricks experience**.  With the `DatabricksTaskGroup`, Astro Datatricks allows you to run from Databricks workflows without
-the need of running Jobs individually, which can result in [75% cost reduction](https://www.databricks.com/product/aws-pricing).
+The **Astro Databricks Provider** is an [Apache Airflow](https://github.com/apache/airflow) provider created by [Astronomer](https://www.astronomer.io/) to run your Databricks notebooks as Databricks Workflows while maintaining Airflow as the authoring interface. When using the `DatabricksTaskGroup` and `DatabricksNotebookOperator`, notebooks run as a Databricks Workflow which can result in a [75% cost reduction](https://www.databricks.com/product/aws-pricing) ($0.40/DBU for all-purpose compute, $0.10/DBU for Jobs compute).
 
 ## Prerequisites
 
@@ -47,7 +46,7 @@ pip install astro-provider-databricks
     airflow db init
     ```
    
-4. [Create using your preferred way](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html) a Databricks Airflow connection (so Airflow can access Databricks using your credentials). This can be done by running the following command, replacing the login and password (with your access token):
+4. [Create a Databricks connection in Airflow](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html). This can be done by running the following command, replacing the login and password (with your access token):
 
 ```shell
 # If using Airflow 2.3 or higher:
