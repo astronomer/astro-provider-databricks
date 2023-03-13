@@ -19,7 +19,7 @@ The **Astro Databricks Provider** is an [Apache Airflow](https://github.com/apac
 ## Prerequisites
 
 - Apache Airflow >= 2.2.4
-- Python >= 2.7
+- Python >= 3.7
 - Databricks account
 - Previously created Databricks Notebooks
 
