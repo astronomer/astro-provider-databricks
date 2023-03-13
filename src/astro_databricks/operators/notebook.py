@@ -93,6 +93,7 @@ class DatabricksNotebookOperator(BaseOperator):
         self.notebook_params = notebook_params or {}
         self.notebook_packages = notebook_packages or []
         self.databricks_conn_id = databricks_conn_id
+        self.databricks_run_id = ""
         self.databricks_metadata: dict | None = None
         self.job_cluster_key = job_cluster_key or ""
         self.new_cluster = new_cluster or {}
@@ -152,6 +153,8 @@ class DatabricksNotebookOperator(BaseOperator):
         api_client = self._get_api_client()
         runs_api = RunsApi(api_client)
         current_task = self._get_current_databricks_task(runs_api)
+        url = runs_api.get_run(self.databricks_run_id, version=JOBS_API_VERSION)['run_page_url']
+        self.log.info(f"Check the job run in Databricks: {url}")
         self._wait_for_pending_task(current_task, runs_api)
         self._wait_for_running_task(current_task, runs_api)
         self._wait_for_terminating_task(current_task, runs_api)
