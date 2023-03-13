@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.1.1 (23-03-13)
+----------------
+
+Enhancements
+
+* `DatabricksWorkflowTaskGroup` and `DatabricksNotebookOperator` log the Databricks Job URL ([#20](https://github.com/astronomer/astro-provider-databricks/pull/20))
+* README improvement ([#21](https://github.com/astronomer/astro-provider-databricks/pull/21))
+
 0.1.0 (2023-03-10)
 -------------------
 
