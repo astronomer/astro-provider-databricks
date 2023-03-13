@@ -29,7 +29,7 @@ The **Astro Databricks Provider** is an [Apache Airflow](https://github.com/apac
 pip install astro-provider-databricks
 ```
 
-## Quickstart (Astro CLI)
+## Quickstart (with Astro CLI)
 
 1. Use pre-existing or create two simple [Databricks Notebooks](https://docs.databricks.com/notebooks/). Their identifiers will be used in step (6). The original example DAG uses:
 
@@ -74,7 +74,7 @@ pip install astro-provider-databricks
 
 8. Open the Airflow UI at http://localhost:8080 and trigger the DAG. You can click on a task, and under the Details tab select "See Databricks Job Run" to open the job in the Databricks UI.
 
-## Quickstart
+## Quickstart (without Astro CLI)
 
 1. Use pre-existing or create two simple [Databricks Notebooks](https://docs.databricks.com/notebooks/). Their identifiers will be used in step (5). The original example DAG uses:
 
