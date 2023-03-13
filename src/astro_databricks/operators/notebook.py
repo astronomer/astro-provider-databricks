@@ -153,8 +153,8 @@ class DatabricksNotebookOperator(BaseOperator):
         api_client = self._get_api_client()
         runs_api = RunsApi(api_client)
         current_task = self._get_current_databricks_task(runs_api)
-
-        self.log.info(f"Check the job run in Databricks: {current_task['run_page_url']}")
+        url = runs_api.get_run(self.databricks_run_id, version=JOBS_API_VERSION)['run_page_url']
+        self.log.info(f"Check the job run in Databricks: {url}")
         self._wait_for_pending_task(current_task, runs_api)
         self._wait_for_running_task(current_task, runs_api)
         self._wait_for_terminating_task(current_task, runs_api)

@@ -165,7 +165,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
             spark_submit_params=self.task_group.spark_submit_params,
         )["run_id"]
         runs_api = RunsApi(api_client)
-        url = runs_api.get_run(run_id)["run_page_url"]
+        url = runs_api.get_run(run_id).get("run_page_url")
         self.log.info(f"Check the job run in Databricks: {url}")
         while runs_api.get_run(run_id)["state"]["life_cycle_state"] == "PENDING":
             print("job pending")

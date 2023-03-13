@@ -68,17 +68,17 @@ pip install astro-provider-databricks
 
    Alternatively, you can download `example_databricks_workflow.py`
    ```shell
-    curl -O https://raw.githubusercontent.com/astronomer/astro-provider-databricks/main/example_dags/example_databricks_workflow.py
+   curl -O https://raw.githubusercontent.com/astronomer/astro-provider-databricks/main/example_dags/example_databricks_workflow.py
    ```
 
 6. Run the example DAG:
 
-    ```sh
+    ```shell
     airflow dags test example_databricks_workflow `date -Iseconds`
     ```
    
     Which will log, among other lines, the link to the Databricks Job Run URL:
-    ```sh
+    ```shell
     [2023-03-13 15:27:09,934] {notebook.py:158} INFO - Check the job run in Databricks: https://dbc-c9390870-65ef.cloud.databricks.com/?o=4256138892007661#job/950578808520081/run/14940832
     ```
    
