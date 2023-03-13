@@ -12,6 +12,6 @@ Features
 
 Known limitations
 
-* Cancelling the Airflow task does not stop its execution in Databricks (issue `#1 <https://github.com/astronomer/astro-providers-databricks/issues/1>`_).
-* Users should not click the buttons "repair all" or "repair single task" while the DAG/task is running (issue `#2 <https://github.com/astronomer/astro-providers-databricks/issues/2>`_).
+* Cancelling the Airflow task does not stop its execution in Databricks (issue `#1 <https://github.com/astronomer/astro-provider-databricks/issues/1>`_).
+* Users should not click the buttons "repair all" or "repair single task" while the DAG/task is running (issue `#2 <https://github.com/astronomer/astro-provider-databricks/issues/2>`_).
 
