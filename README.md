@@ -59,8 +59,8 @@ airflow connections add 'databricks_conn' \
         "password": "personal-access-token"
     }'
 
-# If using Airflow 2.2:
-airflow connections add 'databricks_conn' --conn-type 'databricks' --conn-login 'some.email@yourcompany.com' --conn-host '[https://dbc-9c390870-65ef.cloud.databricks.com/' --conn-password 'personal-access-token'
+# If using Airflow between 2.2.4 and less than 2.3:
+airflow connections add 'databricks_conn' --conn-type 'databricks' --conn-login 'some.email@yourcompany.com' --conn-host 'https://dbc-9c390870-65ef.cloud.databricks.com/' --conn-password 'personal-access-token'
 ```
 
 5. Copy the following workflow into a file named `example_databricks_workflow.py` and add it to the `dags` directory of your Airflow project:
