@@ -31,7 +31,6 @@ from astro_databricks.plugins.plugin import (
     DatabricksJobRunLink,
 )
 
-
 @define
 class DatabricksMetaData:
     databricks_conn_id: str
@@ -166,11 +165,13 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
             spark_submit_params=self.task_group.spark_submit_params,
         )["run_id"]
         runs_api = RunsApi(api_client)
-
+        url = runs_api.get_run(run_id)["run_page_url"]
+        self.log.info(f"Check the job run in Databricks: {url}")
         while runs_api.get_run(run_id)["state"]["life_cycle_state"] == "PENDING":
             print("job pending")
             time.sleep(5)
         self.databricks_run_id = run_id
+
         return {
             "databricks_conn_id": self.databricks_conn_id,
             "databricks_job_id": job_id,
