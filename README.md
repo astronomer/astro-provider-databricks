@@ -50,6 +50,7 @@ pip install astro-provider-databricks
 4. [Create using your preferred way](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html) a Databricks Airflow connection (so Airflow can access Databricks using your credentials). This can be done by running the following command, replacing the login and password (with your access token):
 
 ```shell
+# If using Airflow 2.3 or higher:
 airflow connections add 'databricks_conn' \
     --conn-json '{
         "conn_type": "databricks",
@@ -57,6 +58,9 @@ airflow connections add 'databricks_conn' \
         "host": "https://dbc-c9390870-65ef.cloud.databricks.com/",
         "password": "personal-access-token"
     }'
+
+# If using Airflow between 2.2.4 and less than 2.3:
+airflow connections add 'databricks_conn' --conn-type 'databricks' --conn-login 'some.email@yourcompany.com' --conn-host 'https://dbc-9c390870-65ef.cloud.databricks.com/' --conn-password 'personal-access-token'
 ```
 
 5. Copy the following workflow into a file named `example_databricks_workflow.py` and add it to the `dags` directory of your Airflow project:
@@ -74,7 +78,7 @@ airflow connections add 'databricks_conn' \
     airflow dags test example_databricks_workflow `date -Iseconds`
     ```
    
-This will create a Databricks Workflow with two Notebook jobs.
+This will create a Databricks Workflow with two Notebook jobs. This workflow may take two minutes to complete if the cluster is already up & running or approximately five minutes depending on your cluster initialisation time.
 
 ## Available features
 
