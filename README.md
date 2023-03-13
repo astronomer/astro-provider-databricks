@@ -5,14 +5,14 @@
   Affordable Databricks Workflows in Apache Airflow<br><br>
 </h3>
 
-[![Python versions](https://img.shields.io/pypi/pyversions/astro-providers-databricks.svg)](https://pypi.org/pypi/astro-providers-databricks)
-[![License](https://img.shields.io/pypi/l/astro-providers-databricks.svg)](https://pypi.org/pypi/astro-providers-databricks)
-[![Development Status](https://img.shields.io/pypi/status/astro-providers-databricks.svg)](https://pypi.org/pypi/astro-providers-databricks)
-[![PyPI downloads](https://img.shields.io/pypi/dm/astro-providers-databricks.svg)](https://pypistats.org/packages/astro-providers-databricks)
-[![Contributors](https://img.shields.io/github/contributors/astronomer/astro-providers-databricks)](https://github.com/astronomer/astro-providers-databricks)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/astronomer/astro-providers-databricks)](https://github.com/astronomer/astro-providers-databricks)
-[![CI](https://github.com/astronomer/astro-providers-databricks/actions/workflows/ci.yml/badge.svg)](https://github.com/astronomer/astro-providers-databricks)
-[![codecov](https://codecov.io/gh/astronomer/astro-providers-databricks/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astronomer/astro-providers-databricks)
+[![Python versions](https://img.shields.io/pypi/pyversions/astro-provider-databricks.svg)](https://pypi.org/pypi/astro-provider-databricks)
+[![License](https://img.shields.io/pypi/l/astro-provider-databricks.svg)](https://pypi.org/pypi/astro-provider-databricks)
+[![Development Status](https://img.shields.io/pypi/status/astro-provider-databricks.svg)](https://pypi.org/pypi/astro-provider-databricks)
+[![PyPI downloads](https://img.shields.io/pypi/dm/astro-provider-databricks.svg)](https://pypistats.org/packages/astro-provider-databricks)
+[![Contributors](https://img.shields.io/github/contributors/astronomer/astro-provider-databricks)](https://github.com/astronomer/astro-provider-databricks)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/astronomer/astro-provider-databricks)](https://github.com/astronomer/astro-provider-databricks)
+[![CI](https://github.com/astronomer/astro-provider-databricks/actions/workflows/ci.yml/badge.svg)](https://github.com/astronomer/astro-provider-databricks)
+[![codecov](https://codecov.io/gh/astronomer/astro-provider-databricks/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astronomer/astro-provider-databricks)
 
 
 **Astro Databricks** is an [Apache Airflow](https://github.com/apache/airflow) provider created by [Astronomer](https://www.astronomer.io/) for an **optimal Databricks experience**.  With the `DatabricksTaskGroup`, Astro Datatricks allows you to run from Databricks workflows without
@@ -28,7 +28,7 @@ the need of running Jobs individually, which can result in [75% cost reduction](
 ## Install
 
 ```shell
-pip install astro-providers-databricks
+pip install astro-provider-databricks
 ```
 
 ## Quickstart
@@ -61,11 +61,11 @@ airflow connections add 'databricks_conn' \
 
 5. Copy the following workflow into a file named `example_databricks_workflow.py` and add it to the `dags` directory of your Airflow project:
    
-   https://github.com/astronomer/astro-providers-databricks/blob/45897543a5e34d446c84b3fbc4f6f7a3ed16cdf7/example_dags/example_databricks_workflow.py#L48-L101
+   https://github.com/astronomer/astro-provider-databricks/blob/45897543a5e34d446c84b3fbc4f6f7a3ed16cdf7/example_dags/example_databricks_workflow.py#L48-L101
 
    Alternatively, you can download `example_databricks_workflow.py`
    ```shell
-    curl -O https://raw.githubusercontent.com/astronomer/astro-providers-databricks/main/example_dags/example_databricks_workflow.py
+    curl -O https://raw.githubusercontent.com/astronomer/astro-provider-databricks/main/example_dags/example_databricks_workflow.py
    ```
 
 6. Run the example DAG:
@@ -86,7 +86,7 @@ This will create a Databricks Workflow with two Notebook jobs.
 
 The documentation is a work in progress--we aim to follow the [Diátaxis](https://diataxis.fr/) system:
 
-* [Reference Guide](https://astronomer.github.io/astro-providers-databricks/)
+* [Reference Guide](https://astronomer.github.io/astro-provider-databricks/)
 
 ## Changelog
 

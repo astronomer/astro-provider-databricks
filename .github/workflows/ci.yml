@@ -32,7 +32,7 @@ jobs:
         with:
           config-file: '.github/workflows/mlc_config.json'
 
-# TODO: Fix Type-check failures ticket: https://github.com/astronomer/astro-providers-databricks/issues/5
+# TODO: Fix Type-check failures ticket: https://github.com/astronomer/astro-provider-databricks/issues/5
 #  Type-Check:
 #    if: github.event.action != 'labeled'
 #    runs-on: ubuntu-latest
@@ -204,3 +204,4 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
+
