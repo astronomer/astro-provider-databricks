@@ -78,7 +78,8 @@ airflow connections add 'databricks_conn' --conn-type 'databricks' --conn-login 
     airflow dags test example_databricks_workflow `date -Iseconds`
     ```
    
-This will create a Databricks Workflow with two Notebook jobs. This workflow may take two minutes to complete if the cluster is already running or five minutes otherwise.
+This will create a Databricks Workflow with two Notebook jobs. This workflow may take two minutes to complete if the cluster is already up & running or approximately five minutes depending on your cluster initialisation time.
+
 ## Available features
 
 * `DatabricksWorkflowTaskGroup`: Airflow [task group](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html#taskgroups) that allows users to create a [Databricks Workflow](https://www.databricks.com/product/workflows).
