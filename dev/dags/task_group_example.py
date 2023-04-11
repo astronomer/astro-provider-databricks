@@ -35,7 +35,7 @@ job_clusters = [
     catchup=False,
     tags=["astro-provider-databricks"],
 )
-def example_dbr():
+def task_group_example():
     with DatabricksWorkflowTaskGroup(
         group_id="example_notebooks",
         databricks_conn_id="databricks_default",
@@ -80,4 +80,4 @@ def example_dbr():
         nb_1 >> my_task_group() >> nb_4
 
 
-example_dbr = example_dbr()
+task_group_example()

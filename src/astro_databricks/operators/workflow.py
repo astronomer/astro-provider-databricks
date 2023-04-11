@@ -393,6 +393,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
                     f"Task {task.task_id} does not support conversion to databricks workflow task."
                 )
 
+            create_databricks_workflow_task.relevant_upstreams.append(task.task_id)
             create_databricks_workflow_task.add_task(task)
             task.databricks_metadata = create_databricks_workflow_task.output
 
