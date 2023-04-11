@@ -12,7 +12,7 @@ from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 
 from astro_databricks.constants import JOBS_API_VERSION
-from astro_databricks.operators.workflow import DatabricksMetaData
+from astro_databricks.operators.workflow import DatabricksMetaData, DatabricksWorkflowTaskGroup
 from astro_databricks.plugins.plugin import (
     DatabricksJobRepairSingleFailedLink,
     DatabricksJobRunLink,
@@ -129,8 +129,8 @@ class DatabricksNotebookOperator(BaseOperator):
         """
         Convert the operator to a Databricks workflow task that can be a task in a workflow
         """
-        if hasattr(self.task_group, "notebook_packages"):
-            self.notebook_packages.extend(self.task_group.notebook_packages)
+        if self.databricks_task_group and (self.databricks_task_group, "notebook_packages"):
+            self.notebook_packages.extend(self.databricks_task_group.notebook_packages)
         base_task_json = self._get_task_base_json()
         result = {
             "task_key": self._get_databricks_task_id(self.task_id),
@@ -245,14 +245,33 @@ class DatabricksNotebookOperator(BaseOperator):
         :param context:
         :return:
         """
-        if not (
-            hasattr(self.task_group, "is_databricks")
-            and getattr(self.task_group, "is_databricks")
-        ):
-            self.launch_notebook_job()
-        else:
+        if self.databricks_task_group:
             # if we are in a workflow, we assume there is a metadata from the launch task
             databricks_metadata = DatabricksMetaData(**self.databricks_metadata)
             self.databricks_run_id = databricks_metadata.databricks_run_id
             self.databricks_conn_id = databricks_metadata.databricks_conn_id
+        else:
+            self.launch_notebook_job()
+
         self.monitor_databricks_job()
+
+    @property
+    def databricks_task_group(self) -> DatabricksWorkflowTaskGroup | None:
+        """
+        Traverses up parent TaskGroups until the `is_databricks` flag is found.
+        If found, returns the task group. Otherwise, returns None.
+        """
+        parent_tg = self.task_group
+
+        while parent_tg:
+            if hasattr(parent_tg, "is_databricks") and getattr(parent_tg, "is_databricks"):
+                return parent_tg
+
+            # here, we rely on the fact that Airflow sets the task_group property on tasks/task groups
+            # if that ever changes, we will need to update this
+            if hasattr(parent_tg, "task_group") and getattr(parent_tg, "task_group"):
+                parent_tg = parent_tg.task_group
+            else:
+                return None
+
+        return None

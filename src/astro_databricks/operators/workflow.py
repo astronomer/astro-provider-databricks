@@ -31,6 +31,7 @@ from astro_databricks.plugins.plugin import (
     DatabricksJobRunLink,
 )
 
+
 @define
 class DatabricksMetaData:
     databricks_conn_id: str
@@ -44,6 +45,23 @@ def _get_job_by_name(job_name: str, jobs_api: JobsApi) -> dict | None:
         if job.get("settings", {}).get("name") == job_name:
             return job
     return None
+
+
+def flatten_node(node: TaskGroup | BaseOperator, tasks: list[BaseOperator] = []) -> list[BaseOperator]:
+    """
+    Flattens a node (either a TaskGroup or Operator) to a list of nodes
+    """
+    if isinstance(node, BaseOperator):
+        return [node]
+
+    if isinstance(node, TaskGroup):
+        new_tasks = []
+        for id, child in node.children.items():
+            new_tasks += flatten_node(child, tasks)
+
+        return tasks + new_tasks
+
+    return tasks
 
 
 class _CreateDatabricksWorkflowOperator(BaseOperator):
@@ -141,7 +159,8 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         job_id = job["job_id"] if job else None
         current_job_spec = self.create_workflow_json()
         if not isinstance(self.task_group, DatabricksWorkflowTaskGroup):
-            raise AirflowException("Task group must be a DatabricksWorkflowTaskGroup")
+            raise AirflowException(
+                "Task group must be a DatabricksWorkflowTaskGroup")
         if job_id:
             self.log.info(
                 "Updating existing job with spec %s",
@@ -153,7 +172,8 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
             )
         else:
             self.log.info(
-                "Creating new job with spec %s", json.dumps(current_job_spec, indent=4)
+                "Creating new job with spec %s", json.dumps(
+                    current_job_spec, indent=4)
             )
             job_id = jobs_api.create_job(json=current_job_spec)["job_id"]
 
@@ -345,7 +365,8 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
 
     def __exit__(self, _type, _value, _tb):
         """Exit the context manager and add tasks to a single _CreateDatabricksWorkflowOperator."""
-        roots = self.roots
+        roots = list(self.get_roots())
+        tasks = flatten_node(self)
 
         # For Airflow versions <2.3, the `dag` attribute is unassociated, and hence we need to add that.
         if not hasattr(self, "dag"):
@@ -353,18 +374,17 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
 
             self.dag = DagContext.get_current_dag()
 
-        create_databricks_workflow_task: _CreateDatabricksWorkflowOperator = (
-            _CreateDatabricksWorkflowOperator(
-                dag=self.dag,
-                task_id="launch",
-                databricks_conn_id=self.databricks_conn_id,
-                job_clusters=self.job_clusters,
-                existing_clusters=self.existing_clusters,
-                extra_job_params=self.extra_job_params,
-            )
+        create_databricks_workflow_task = _CreateDatabricksWorkflowOperator(
+            dag=self.dag,
+            task_group=self,
+            task_id="launch",
+            databricks_conn_id=self.databricks_conn_id,
+            job_clusters=self.job_clusters,
+            existing_clusters=self.existing_clusters,
+            extra_job_params=self.extra_job_params,
         )
 
-        for task in roots:
+        for task in tasks:
             if not (
                 hasattr(task, "convert_to_databricks_workflow_task")
                 and callable(task.convert_to_databricks_workflow_task)
@@ -372,15 +392,12 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
                 raise AirflowException(
                     f"Task {task.task_id} does not support conversion to databricks workflow task."
                 )
-            create_databricks_workflow_task.set_upstream(
-                task_or_task_list=list(task.upstream_list)
-            )
 
-        for task_id, task in self.children.items():
-            if task_id != f"{self.group_id}.launch":
-                create_databricks_workflow_task.relevant_upstreams.append(task_id)
-                create_databricks_workflow_task.add_task(task)
-                task.databricks_metadata = create_databricks_workflow_task.output
+            create_databricks_workflow_task.relevant_upstreams.append(task.task_id)
+            create_databricks_workflow_task.add_task(task)
+            task.databricks_metadata = create_databricks_workflow_task.output
 
-        create_databricks_workflow_task.set_downstream(roots)
+        for root_task in roots:
+            root_task.set_upstream(create_databricks_workflow_task)
+
         super().__exit__(_type, _value, _tb)
