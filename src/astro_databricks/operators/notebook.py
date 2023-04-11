@@ -267,9 +267,10 @@ class DatabricksNotebookOperator(BaseOperator):
             if hasattr(parent_tg, "is_databricks") and getattr(parent_tg, "is_databricks"):
                 return parent_tg
 
-            elif hasattr(parent_tg, "task_group") and getattr(parent_tg, "task_group"):
+            # here, we rely on the fact that Airflow sets the task_group property on tasks/task groups
+            # if that ever changes, we will need to update this
+            if hasattr(parent_tg, "task_group") and getattr(parent_tg, "task_group"):
                 parent_tg = parent_tg.task_group
-
             else:
                 return None
 
