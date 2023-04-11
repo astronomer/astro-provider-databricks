@@ -3,7 +3,7 @@ docker_compose('dev/docker-compose.yaml')
 sync_pyproj_toml = sync('./pyproject.toml', '/usr/local/airflow/astro_databricks/pyproject.toml')
 sync_readme = sync('./README.md', '/usr/local/airflow/astro_databricks/README.md')
 sync_src = sync('./src', '/usr/local/airflow/astro_databricks/src')
-sync_dev_dir = sync('./src', '/usr/local/airflow/astro_databricks/dev')
+sync_dev_dir = sync('./dev', '/usr/local/airflow/astro_databricks/dev')
 
 docker_build(
     'astro-sdk-template-dev',

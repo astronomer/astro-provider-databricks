@@ -245,14 +245,31 @@ class DatabricksNotebookOperator(BaseOperator):
         :param context:
         :return:
         """
-        if not (
-            hasattr(self.task_group, "is_databricks")
-            and getattr(self.task_group, "is_databricks")
-        ):
-            self.launch_notebook_job()
-        else:
+        if self.in_databricks_task_group():
             # if we are in a workflow, we assume there is a metadata from the launch task
             databricks_metadata = DatabricksMetaData(**self.databricks_metadata)
             self.databricks_run_id = databricks_metadata.databricks_run_id
             self.databricks_conn_id = databricks_metadata.databricks_conn_id
+        else:
+            self.launch_notebook_job()
+
         self.monitor_databricks_job()
+
+    def in_databricks_task_group(self) -> bool:
+        """
+        Traverses up parent TaskGroups until the `is_databricks` flag is found.
+        If found, returns True. Otherwise, returns False.
+        """
+        parent_tg = self.task_group
+
+        while parent_tg:
+            if hasattr(parent_tg, "is_databricks") and getattr(parent_tg, "is_databricks"):
+                return True
+
+            elif hasattr(parent_tg, "task_group") and getattr(parent_tg, "task_group"):
+                parent_tg = parent_tg.task_group
+
+            else:
+                return False
+
+        return False
