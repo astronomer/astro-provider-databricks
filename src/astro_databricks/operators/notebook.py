@@ -12,7 +12,7 @@ from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 
 from astro_databricks.constants import JOBS_API_VERSION
-from astro_databricks.operators.workflow import DatabricksMetaData
+from astro_databricks.operators.workflow import DatabricksMetaData, DatabricksWorkflowTaskGroup
 from astro_databricks.plugins.plugin import (
     DatabricksJobRepairSingleFailedLink,
     DatabricksJobRunLink,
@@ -129,8 +129,8 @@ class DatabricksNotebookOperator(BaseOperator):
         """
         Convert the operator to a Databricks workflow task that can be a task in a workflow
         """
-        if hasattr(self.task_group, "notebook_packages"):
-            self.notebook_packages.extend(self.task_group.notebook_packages)
+        if self.databricks_task_group and (self.databricks_task_group, "notebook_packages"):
+            self.notebook_packages.extend(self.databricks_task_group.notebook_packages)
         base_task_json = self._get_task_base_json()
         result = {
             "task_key": self._get_databricks_task_id(self.task_id),
@@ -245,7 +245,7 @@ class DatabricksNotebookOperator(BaseOperator):
         :param context:
         :return:
         """
-        if self.in_databricks_task_group():
+        if self.databricks_task_group:
             # if we are in a workflow, we assume there is a metadata from the launch task
             databricks_metadata = DatabricksMetaData(**self.databricks_metadata)
             self.databricks_run_id = databricks_metadata.databricks_run_id
@@ -255,21 +255,22 @@ class DatabricksNotebookOperator(BaseOperator):
 
         self.monitor_databricks_job()
 
-    def in_databricks_task_group(self) -> bool:
+    @property
+    def databricks_task_group(self) -> DatabricksWorkflowTaskGroup | None:
         """
         Traverses up parent TaskGroups until the `is_databricks` flag is found.
-        If found, returns True. Otherwise, returns False.
+        If found, returns the task group. Otherwise, returns None.
         """
         parent_tg = self.task_group
 
         while parent_tg:
             if hasattr(parent_tg, "is_databricks") and getattr(parent_tg, "is_databricks"):
-                return True
+                return parent_tg
 
             elif hasattr(parent_tg, "task_group") and getattr(parent_tg, "task_group"):
                 parent_tg = parent_tg.task_group
 
             else:
-                return False
+                return None
 
-        return False
+        return None

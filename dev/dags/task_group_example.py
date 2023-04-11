@@ -40,6 +40,7 @@ def task_group_example():
         group_id="example_notebooks",
         databricks_conn_id="databricks_default",
         job_clusters=job_clusters,
+        notebook_packages=[{"pypi": {"package": "simplejson"}}],
     ):
         nb_1 = DatabricksNotebookOperator(
             task_id="nb_1",
@@ -47,7 +48,7 @@ def task_group_example():
             notebook_path="/Shared/Notebook_1",
             source="WORKSPACE",
             job_cluster_key="Shared_job_cluster",
-            notebook_packages=[{"pypi": {"package": "simplejson"}}],
+            notebook_packages=[{"pypi": {"package": "Faker"}}]
         )
 
         @task_group
@@ -58,7 +59,6 @@ def task_group_example():
                 notebook_path="/Shared/Notebook_2",
                 source="WORKSPACE",
                 job_cluster_key="Shared_job_cluster",
-                notebook_packages=[{"pypi": {"package": "simplejson"}}],
             )
 
             nb_3 = DatabricksNotebookOperator(
