@@ -122,14 +122,15 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         """
         self.tasks_to_convert.append(task)
 
-    def create_workflow_json(self) -> dict[str, object]:
+    def create_workflow_json(self, context: Context | None = None) -> dict[str, object]:
         """Create a workflow json that can be submitted to databricks.
 
         :return: A workflow json
         """
         task_json = [
             task.convert_to_databricks_workflow_task(
-                relevant_upstreams=self.relevant_upstreams
+                relevant_upstreams=self.relevant_upstreams,
+                context=context
             )
             for task in self.tasks_to_convert
         ]
@@ -150,6 +151,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         return self.dag_id + "." + self.task_group.group_id
 
     def execute(self, context: Context) -> Any:
+        #[task.render_template_fields(context) for task in self.tasks_to_convert]
         hook = DatabricksHook(self.databricks_conn_id)
         databricks_conn = hook.get_conn()
         api_client = ApiClient(
@@ -159,7 +161,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         job = _get_job_by_name(self.databricks_job_name, jobs_api)
 
         job_id = job["job_id"] if job else None
-        current_job_spec = self.create_workflow_json()
+        current_job_spec = self.create_workflow_json(context)
         if not isinstance(self.task_group, DatabricksWorkflowTaskGroup):
             raise AirflowException("Task group must be a DatabricksWorkflowTaskGroup")
         if job_id:

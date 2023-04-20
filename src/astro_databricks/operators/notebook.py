@@ -77,7 +77,7 @@ class DatabricksNotebookOperator(BaseOperator):
         DatabricksJobRunLink(),
         DatabricksJobRepairSingleFailedLink(),
     )
-    template_fields = ("databricks_metadata",)
+    template_fields = ("databricks_metadata", "notebook_params",)
 
     def __init__(
         self,
@@ -127,7 +127,7 @@ class DatabricksNotebookOperator(BaseOperator):
         }
 
     def convert_to_databricks_workflow_task(
-        self, relevant_upstreams: list[BaseOperator]
+            self, relevant_upstreams: list[BaseOperator], context: Context | None = None
     ):
         """
         Convert the operator to a Databricks workflow task that can be a task in a workflow
@@ -137,6 +137,9 @@ class DatabricksNotebookOperator(BaseOperator):
             "notebook_packages",
         ):
             self.notebook_packages.extend(self.databricks_task_group.notebook_packages)
+
+        if context:
+            self.render_template_fields(context)
         base_task_json = self._get_task_base_json()
         result = {
             "task_key": self._get_databricks_task_id(self.task_id),
