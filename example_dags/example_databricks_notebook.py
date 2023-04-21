@@ -32,9 +32,10 @@ NEW_CLUSTER_SPEC = {
     "runtime_engine": "STANDARD",
     "num_workers": 8,
 }
+USER = os.environ.get("USER")
 
 dag = DAG(
-    dag_id="example_databricks_notebook",
+    dag_id=f"example_databricks_notebook_{USER}",
     start_date=datetime(2022, 1, 1),
     schedule_interval=None,
     catchup=False,
