@@ -151,7 +151,6 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         return self.dag_id + "." + self.task_group.group_id
 
     def execute(self, context: Context) -> Any:
-        #[task.render_template_fields(context) for task in self.tasks_to_convert]
         hook = DatabricksHook(self.databricks_conn_id)
         databricks_conn = hook.get_conn()
         api_client = ApiClient(
@@ -186,14 +185,23 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
             python_params=self.task_group.python_params,
             spark_submit_params=self.task_group.spark_submit_params,
         )["run_id"]
+        self.databricks_run_id = run_id
+
         runs_api = RunsApi(api_client)
         url = runs_api.get_run(run_id).get("run_page_url")
         self.log.info(f"Check the job run in Databricks: {url}")
-        while runs_api.get_run(run_id)["state"]["life_cycle_state"] == "PENDING":
-            print("job pending")
-            time.sleep(5)
-        self.databricks_run_id = run_id
 
+        state = runs_api.get_run(run_id)["state"]["life_cycle_state"]
+        self.log.info(f"Job state: {state}")
+
+        if state not in ("PENDING", "BLOCKED", "RUNNING"):
+            raise AirflowException(f"Could not start the workflow job, it had state {state}")
+
+        while state in ("PENDING", "BLOCKED"):
+            self.log.info(f"Job {state}")
+            time.sleep(5)
+            state = runs_api.get_run(run_id)["state"]["life_cycle_state"]
+       
         return {
             "databricks_conn_id": self.databricks_conn_id,
             "databricks_job_id": job_id,
@@ -397,7 +405,6 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
 
             create_databricks_workflow_task.relevant_upstreams.append(task.task_id)
             create_databricks_workflow_task.add_task(task)
-            task.databricks_metadata = create_databricks_workflow_task.output
 
         for root_task in roots:
             root_task.set_upstream(create_databricks_workflow_task)

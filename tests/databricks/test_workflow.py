@@ -47,8 +47,9 @@ expected_workflow_json = {
 @mock.patch("astro_databricks.operators.workflow.DatabricksHook")
 @mock.patch("astro_databricks.operators.workflow.ApiClient")
 @mock.patch("astro_databricks.operators.workflow.JobsApi")
+@mock.patch("astro_databricks.operators.workflow.RunsApi.get_run", return_value={"state": {"life_cycle_state": "RUNNING"}})
 def test_create_workflow_from_notebooks_with_create(
-    mock_jobs_api, mock_api, mock_hook, dag
+    mock_run_api, mock_jobs_api, mock_api, mock_hook, dag
 ):
     mock_jobs_api.return_value.create_job.return_value = {"job_id": 1}
     with dag:
@@ -98,8 +99,9 @@ def test_create_workflow_from_notebooks_with_create(
 @mock.patch("astro_databricks.operators.workflow.ApiClient")
 @mock.patch("astro_databricks.operators.workflow.JobsApi")
 @mock.patch("astro_databricks.operators.workflow._get_job_by_name")
+@mock.patch("astro_databricks.operators.workflow.RunsApi.get_run", return_value={"state": {"life_cycle_state": "RUNNING"}})
 def test_create_workflow_from_notebooks_existing_job(
-    mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag
+    mock_run_api, mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag
 ):
     mock_get_jobs.return_value = {"job_id": 1}
     with dag:
@@ -149,8 +151,9 @@ def test_create_workflow_from_notebooks_existing_job(
 @mock.patch("astro_databricks.operators.workflow.ApiClient")
 @mock.patch("astro_databricks.operators.workflow.JobsApi")
 @mock.patch("astro_databricks.operators.workflow._get_job_by_name")
+@mock.patch("astro_databricks.operators.workflow.RunsApi.get_run", return_value={"state": {"life_cycle_state": "RUNNING"}})
 def test_create_workflow_with_arbitrary_extra_job_params(
-    mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag
+    mock_run_api, mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag
 ):
     mock_get_jobs.return_value = {"job_id": 862519602273592}
 

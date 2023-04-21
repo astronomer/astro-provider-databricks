@@ -20,6 +20,8 @@ DATABRICKS_NOTIFICATION_EMAIL = os.getenv(
 DATABRICKS_DESTINATION_ID = os.getenv(
     "ASTRO_DATABRICKS_DESTINATION_ID", "b0aea8ab-ea8c-4a45-a2e9-9a26753fd702"
 )
+
+USER = os.environ.get('USER')
 GROUP_ID = os.getenv("DATABRICKS_GROUP_ID", "1234").replace(".", "_")
 USER = os.environ.get("USER")
 

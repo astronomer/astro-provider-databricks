@@ -257,8 +257,10 @@ class DatabricksNotebookOperator(BaseOperator):
         :return:
         """
         if self.databricks_task_group:
-            # if we are in a workflow, we assume there is a metadata from the launch task
-            databricks_metadata = DatabricksMetaData(**self.databricks_metadata)
+            # if we are in a workflow, we assume there is an upstream launch task
+            launch_task_id = [task for task in self.upstream_task_ids if task.endswith(".launch")][0]
+            databricks_metadata = context["ti"].xcom_pull(task_ids=launch_task_id)
+            databricks_metadata = DatabricksMetaData(**databricks_metadata)
             self.databricks_run_id = databricks_metadata.databricks_run_id
             self.databricks_conn_id = databricks_metadata.databricks_conn_id
         else:
