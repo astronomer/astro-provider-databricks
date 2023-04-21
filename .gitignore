@@ -143,3 +143,13 @@ logs/
 
 # Airflow connections file
 test-connections.yaml
+
+# Airflow standalone
+airflow.cfg
+airflow.db
+dags
+standalone_admin_password.txt
+webserver_config.py
+
+# VIM
+*.sw[a-z]
