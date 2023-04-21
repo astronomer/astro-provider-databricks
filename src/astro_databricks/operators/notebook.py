@@ -265,7 +265,9 @@ class DatabricksNotebookOperator(BaseOperator):
                 launch_task_id = [
                     task for task in self.upstream_task_ids if task.endswith(".launch")
                 ][0]
-                self.databricks_metadata = context["ti"].xcom_pull(task_ids=launch_task_id)
+                self.databricks_metadata = context["ti"].xcom_pull(
+                    task_ids=launch_task_id
+                )
             databricks_metadata = DatabricksMetaData(**self.databricks_metadata)
             self.databricks_run_id = databricks_metadata.databricks_run_id
             self.databricks_conn_id = databricks_metadata.databricks_conn_id
