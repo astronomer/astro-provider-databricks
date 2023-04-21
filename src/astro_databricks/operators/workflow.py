@@ -47,9 +47,7 @@ def _get_job_by_name(job_name: str, jobs_api: JobsApi) -> dict | None:
     return None
 
 
-def flatten_node(
-    node: TaskGroup | BaseOperator, tasks: list[BaseOperator] = []
-) -> list[BaseOperator]:
+def flatten_node(node: TaskGroup | BaseOperator, tasks: list[BaseOperator] = []) -> list[BaseOperator]:
     """
     Flattens a node (either a TaskGroup or Operator) to a list of nodes
     """
@@ -129,7 +127,8 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         """
         task_json = [
             task.convert_to_databricks_workflow_task(
-                relevant_upstreams=self.relevant_upstreams, context=context
+                relevant_upstreams=self.relevant_upstreams,
+                context=context
             )
             for task in self.tasks_to_convert
         ]
@@ -161,7 +160,8 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         job_id = job["job_id"] if job else None
         current_job_spec = self.create_workflow_json(context)
         if not isinstance(self.task_group, DatabricksWorkflowTaskGroup):
-            raise AirflowException("Task group must be a DatabricksWorkflowTaskGroup")
+            raise AirflowException(
+                "Task group must be a DatabricksWorkflowTaskGroup")
         if job_id:
             self.log.info(
                 "Updating existing job with spec %s",
@@ -173,7 +173,8 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
             )
         else:
             self.log.info(
-                "Creating new job with spec %s", json.dumps(current_job_spec, indent=4)
+                "Creating new job with spec %s", json.dumps(
+                    current_job_spec, indent=4)
             )
             job_id = jobs_api.create_job(json=current_job_spec)["job_id"]
 
@@ -189,20 +190,17 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         runs_api = RunsApi(api_client)
         url = runs_api.get_run(run_id).get("run_page_url")
         self.log.info(f"Check the job run in Databricks: {url}")
-
         state = runs_api.get_run(run_id)["state"]["life_cycle_state"]
         self.log.info(f"Job state: {state}")
 
         if state not in ("PENDING", "BLOCKED", "RUNNING"):
-            raise AirflowException(
-                f"Could not start the workflow job, it had state {state}"
-            )
+            raise AirflowException(f"Could not start the workflow job, it had state {state}")
 
         while state in ("PENDING", "BLOCKED"):
             self.log.info(f"Job {state}")
             time.sleep(5)
             state = runs_api.get_run(run_id)["state"]["life_cycle_state"]
-
+       
         return {
             "databricks_conn_id": self.databricks_conn_id,
             "databricks_job_id": job_id,
@@ -404,6 +402,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
                     f"Task {task.task_id} does not support conversion to databricks workflow task."
                 )
 
+            task.databricks_metadata = create_databricks_workflow_task.output
             create_databricks_workflow_task.relevant_upstreams.append(task.task_id)
             create_databricks_workflow_task.add_task(task)
 
