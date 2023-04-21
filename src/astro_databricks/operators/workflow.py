@@ -47,7 +47,9 @@ def _get_job_by_name(job_name: str, jobs_api: JobsApi) -> dict | None:
     return None
 
 
-def flatten_node(node: TaskGroup | BaseOperator, tasks: list[BaseOperator] = []) -> list[BaseOperator]:
+def flatten_node(
+    node: TaskGroup | BaseOperator, tasks: list[BaseOperator] = []
+) -> list[BaseOperator]:
     """
     Flattens a node (either a TaskGroup or Operator) to a list of nodes
     """
@@ -159,8 +161,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         job_id = job["job_id"] if job else None
         current_job_spec = self.create_workflow_json()
         if not isinstance(self.task_group, DatabricksWorkflowTaskGroup):
-            raise AirflowException(
-                "Task group must be a DatabricksWorkflowTaskGroup")
+            raise AirflowException("Task group must be a DatabricksWorkflowTaskGroup")
         if job_id:
             self.log.info(
                 "Updating existing job with spec %s",
@@ -172,8 +173,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
             )
         else:
             self.log.info(
-                "Creating new job with spec %s", json.dumps(
-                    current_job_spec, indent=4)
+                "Creating new job with spec %s", json.dumps(current_job_spec, indent=4)
             )
             job_id = jobs_api.create_job(json=current_job_spec)["job_id"]
 

@@ -357,7 +357,7 @@ def test_monitor_databricks_job_success(
     mock_runs_api,
     mock_databricks_hook,
     databricks_notebook_operator,
-    caplog
+    caplog,
 ):
     mock_get_databricks_task_id.return_value = "1"
     # Define the expected response
@@ -382,7 +382,10 @@ def test_monitor_databricks_job_success(
     mock_runs_api.return_value.get_run.assert_called_with(
         databricks_notebook_operator.databricks_run_id, version="2.1"
     )
-    assert 'Check the job run in Databricks: https://databricks-instance-xyz.cloud.databricks.com/#job/1234/run/1' in caplog.messages
+    assert (
+        "Check the job run in Databricks: https://databricks-instance-xyz.cloud.databricks.com/#job/1234/run/1"
+        in caplog.messages
+    )
 
 
 @mock.patch("astro_databricks.operators.notebook.DatabricksHook")

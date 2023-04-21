@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from airflow.decorators import dag, task_group
-
+from airflow.decorators import dag
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
 
@@ -40,7 +39,7 @@ def basic_notebooks():
         group_id="example_notebooks",
         databricks_conn_id="databricks_default",
         job_clusters=job_clusters,
-        notebook_packages=[{"pypi": {"package": "simplejson"}}]
+        notebook_packages=[{"pypi": {"package": "simplejson"}}],
     ):
         nb_1 = DatabricksNotebookOperator(
             task_id="nb_1",
