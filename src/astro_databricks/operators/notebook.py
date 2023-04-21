@@ -142,7 +142,13 @@ class DatabricksNotebookOperator(BaseOperator):
             self.notebook_packages.extend(self.databricks_task_group.notebook_packages)
 
         if context:
-            self.render_template_fields(context)
+            # The following exception currently only happens on Airflow 2.3, with the following error:
+            # airflow.exceptions.AirflowException: XComArg result from test_workflow.launch at example_databricks_workflow with key="return_value" is not found!
+            try:
+                self.render_template_fields(context)
+            except AirflowException:
+                self.log.exception("Unable to process template fields")
+
         base_task_json = self._get_task_base_json()
         result = {
             "task_key": self._get_databricks_task_id(self.task_id),
