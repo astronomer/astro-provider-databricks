@@ -77,7 +77,10 @@ class DatabricksNotebookOperator(BaseOperator):
         DatabricksJobRunLink(),
         DatabricksJobRepairSingleFailedLink(),
     )
-    template_fields = ("databricks_metadata", "notebook_params",)
+    template_fields = (
+        "databricks_metadata",
+        "notebook_params",
+    )
 
     def __init__(
         self,
@@ -127,7 +130,7 @@ class DatabricksNotebookOperator(BaseOperator):
         }
 
     def convert_to_databricks_workflow_task(
-            self, relevant_upstreams: list[BaseOperator], context: Context | None = None
+        self, relevant_upstreams: list[BaseOperator], context: Context | None = None
     ):
         """
         Convert the operator to a Databricks workflow task that can be a task in a workflow
@@ -258,7 +261,9 @@ class DatabricksNotebookOperator(BaseOperator):
         """
         if self.databricks_task_group:
             # if we are in a workflow, we assume there is an upstream launch task
-            launch_task_id = [task for task in self.upstream_task_ids if task.endswith(".launch")][0]
+            launch_task_id = [
+                task for task in self.upstream_task_ids if task.endswith(".launch")
+            ][0]
             databricks_metadata = context["ti"].xcom_pull(task_ids=launch_task_id)
             databricks_metadata = DatabricksMetaData(**databricks_metadata)
             self.databricks_run_id = databricks_metadata.databricks_run_id

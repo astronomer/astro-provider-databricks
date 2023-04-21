@@ -129,8 +129,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         """
         task_json = [
             task.convert_to_databricks_workflow_task(
-                relevant_upstreams=self.relevant_upstreams,
-                context=context
+                relevant_upstreams=self.relevant_upstreams, context=context
             )
             for task in self.tasks_to_convert
         ]
@@ -195,13 +194,15 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         self.log.info(f"Job state: {state}")
 
         if state not in ("PENDING", "BLOCKED", "RUNNING"):
-            raise AirflowException(f"Could not start the workflow job, it had state {state}")
+            raise AirflowException(
+                f"Could not start the workflow job, it had state {state}"
+            )
 
         while state in ("PENDING", "BLOCKED"):
             self.log.info(f"Job {state}")
             time.sleep(5)
             state = runs_api.get_run(run_id)["state"]["life_cycle_state"]
-       
+
         return {
             "databricks_conn_id": self.databricks_conn_id,
             "databricks_job_id": job_id,
