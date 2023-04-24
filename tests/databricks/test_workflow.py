@@ -1,5 +1,8 @@
 from unittest import mock
 
+import pytest
+from airflow.exceptions import AirflowException
+
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
 
@@ -42,6 +45,52 @@ expected_workflow_json = {
     ],
     "timeout_seconds": 0,
 }
+
+
+@mock.patch("astro_databricks.operators.workflow.DatabricksHook")
+@mock.patch("astro_databricks.operators.workflow.ApiClient")
+@mock.patch("astro_databricks.operators.workflow.JobsApi")
+@mock.patch(
+    "astro_databricks.operators.workflow.RunsApi.get_run",
+    return_value={"state": {"life_cycle_state": "SKIPPED"}},
+)
+def test_create_workflow_from_notebooks_raises_exception_due_to_job_being_skipped(
+    mock_run_api, mock_jobs_api, mock_api, mock_hook, dag
+):
+    mock_jobs_api.return_value.create_job.return_value = {"job_id": 1}
+    with dag:
+        task_group = DatabricksWorkflowTaskGroup(
+            group_id="test_workflow",
+            databricks_conn_id="foo",
+            job_clusters=[{"job_cluster_key": "foo"}],
+            notebook_params=[{"notebook_path": "/foo/bar"}],
+            notebook_packages=[{"tg_index": {"package": "tg_package"}}],
+        )
+        with task_group:
+            notebook_1 = DatabricksNotebookOperator(
+                task_id="notebook_1",
+                databricks_conn_id="foo",
+                notebook_path="/foo/bar",
+                notebook_packages=[{"nb_index": {"package": "nb_package"}}],
+                source="WORKSPACE",
+                job_cluster_key="foo",
+            )
+            notebook_2 = DatabricksNotebookOperator(
+                task_id="notebook_2",
+                databricks_conn_id="foo",
+                notebook_path="/foo/bar",
+                source="WORKSPACE",
+                job_cluster_key="foo",
+                notebook_params={
+                    "foo": "bar",
+                },
+            )
+            notebook_1 >> notebook_2
+
+    assert len(task_group.children) == 3
+    with pytest.raises(AirflowException) as exc_info:
+        task_group.children["test_workflow.launch"].execute(context={})
+    assert str(exc_info.value) == "Could not start the workflow job, it had state SKIPPED"
 
 
 @mock.patch("astro_databricks.operators.workflow.DatabricksHook")
