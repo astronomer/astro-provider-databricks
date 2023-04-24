@@ -12,7 +12,10 @@ from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 
 from astro_databricks.constants import JOBS_API_VERSION
-from astro_databricks.operators.workflow import DatabricksMetaData, DatabricksWorkflowTaskGroup
+from astro_databricks.operators.workflow import (
+    DatabricksMetaData,
+    DatabricksWorkflowTaskGroup,
+)
 from astro_databricks.plugins.plugin import (
     DatabricksJobRepairSingleFailedLink,
     DatabricksJobRunLink,
@@ -129,7 +132,10 @@ class DatabricksNotebookOperator(BaseOperator):
         """
         Convert the operator to a Databricks workflow task that can be a task in a workflow
         """
-        if self.databricks_task_group and (self.databricks_task_group, "notebook_packages"):
+        if self.databricks_task_group and (
+            self.databricks_task_group,
+            "notebook_packages",
+        ):
             self.notebook_packages.extend(self.databricks_task_group.notebook_packages)
         base_task_json = self._get_task_base_json()
         result = {
@@ -153,7 +159,9 @@ class DatabricksNotebookOperator(BaseOperator):
         api_client = self._get_api_client()
         runs_api = RunsApi(api_client)
         current_task = self._get_current_databricks_task(runs_api)
-        url = runs_api.get_run(self.databricks_run_id, version=JOBS_API_VERSION)['run_page_url']
+        url = runs_api.get_run(self.databricks_run_id, version=JOBS_API_VERSION)[
+            "run_page_url"
+        ]
         self.log.info(f"Check the job run in Databricks: {url}")
         self._wait_for_pending_task(current_task, runs_api)
         self._wait_for_running_task(current_task, runs_api)
@@ -264,7 +272,9 @@ class DatabricksNotebookOperator(BaseOperator):
         parent_tg = self.task_group
 
         while parent_tg:
-            if hasattr(parent_tg, "is_databricks") and getattr(parent_tg, "is_databricks"):
+            if hasattr(parent_tg, "is_databricks") and getattr(
+                parent_tg, "is_databricks"
+            ):
                 return parent_tg
 
             # here, we rely on the fact that Airflow sets the task_group property on tasks/task groups

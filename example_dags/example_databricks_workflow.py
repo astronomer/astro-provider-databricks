@@ -4,7 +4,6 @@ from datetime import timedelta
 
 from airflow.models.dag import DAG
 from airflow.utils.timezone import datetime
-
 from astro_databricks import DatabricksNotebookOperator, DatabricksWorkflowTaskGroup
 
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
