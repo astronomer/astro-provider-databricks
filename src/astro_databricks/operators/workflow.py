@@ -58,7 +58,7 @@ def flatten_node(
 
     if isinstance(node, TaskGroup):
         new_tasks = []
-        for id, child in node.children.items():
+        for id_, child in node.children.items():
             new_tasks += flatten_node(child, tasks)
 
         return tasks + new_tasks

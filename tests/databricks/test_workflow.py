@@ -1,8 +1,10 @@
+from __future__ import annotations
+
+import logging
 from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException
-
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
 
@@ -90,7 +92,9 @@ def test_create_workflow_from_notebooks_raises_exception_due_to_job_being_skippe
     assert len(task_group.children) == 3
     with pytest.raises(AirflowException) as exc_info:
         task_group.children["test_workflow.launch"].execute(context={})
-    assert str(exc_info.value) == "Could not start the workflow job, it had state SKIPPED"
+    assert (
+        str(exc_info.value) == "Could not start the workflow job, it had state SKIPPED"
+    )
 
 
 @mock.patch("astro_databricks.operators.workflow.DatabricksHook")
@@ -149,16 +153,29 @@ def test_create_workflow_from_notebooks_with_create(
 
 @mock.patch("astro_databricks.operators.workflow.DatabricksHook")
 @mock.patch("astro_databricks.operators.workflow.ApiClient")
-@mock.patch("astro_databricks.operators.workflow.JobsApi")
 @mock.patch("astro_databricks.operators.workflow._get_job_by_name")
 @mock.patch(
     "astro_databricks.operators.workflow.RunsApi.get_run",
-    return_value={"state": {"life_cycle_state": "RUNNING"}},
+    side_effect=[
+        {"state": {"life_cycle_state": "BLOCKED"}},
+        {"state": {"life_cycle_state": "BLOCKED"}},
+        {"state": {"life_cycle_state": "RUNNING"}},
+    ],
 )
-def test_create_workflow_from_notebooks_existing_job(
-    mock_run_api, mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag
+@mock.patch("astro_databricks.operators.workflow.JobsApi.run_now")
+@mock.patch("astro_databricks.operators.workflow.JobsApi.create_job")
+def test_create_workflow_from_notebooks_job_templates_notebook_jobs(
+    mock_create_job,
+    mock_run_now,
+    mock_get_run,
+    mock_get_jobs,
+    mock_api,
+    mock_hook,
+    dag,
+    caplog,
 ):
-    mock_get_jobs.return_value = {"job_id": 1}
+    mock_get_jobs.return_value = {"job_id": None}
+    caplog.set_level(logging.INFO)
     with dag:
         task_group = DatabricksWorkflowTaskGroup(
             group_id="test_workflow",
@@ -173,32 +190,23 @@ def test_create_workflow_from_notebooks_existing_job(
                 databricks_conn_id="foo",
                 notebook_path="/foo/bar",
                 notebook_packages=[{"nb_index": {"package": "nb_package"}}],
+                notebook_params=[{"ds": "{{ ds }}"}],
                 source="WORKSPACE",
                 job_cluster_key="foo",
             )
-            notebook_2 = DatabricksNotebookOperator(
-                task_id="notebook_2",
-                databricks_conn_id="foo",
-                notebook_path="/foo/bar",
-                source="WORKSPACE",
-                job_cluster_key="foo",
-                notebook_params={
-                    "foo": "bar",
-                },
-            )
-            notebook_1 >> notebook_2
 
-    assert len(task_group.children) == 3
-    task_group.children["test_workflow.launch"].execute(context={})
-    mock_jobs_api.return_value.reset_job.assert_called_once_with(
-        json={"job_id": 1, "new_settings": expected_workflow_json},
-    )
-    mock_jobs_api.return_value.run_now.assert_called_once_with(
-        job_id=1,
-        jar_params=[],
-        notebook_params=[{"notebook_path": "/foo/bar"}],
-        python_params=[],
-        spark_submit_params=[],
+            notebook_1
+
+    assert len(task_group.children) == 2
+    context = {"ds": "yyyy-mm-dd", "ti": mock.MagicMock(), "expanded_ti_count": 0}
+    task_group.children["test_workflow.launch"].execute(context=context)
+    assert mock_get_run.call_count == 3
+    assert "Job state: BLOCKED" in caplog.messages
+    assert (
+        mock_create_job.call_args.kwargs["json"]["tasks"][0]["notebook_task"][
+            "base_parameters"
+        ][0]["ds"]
+        == "yyyy-mm-dd"
     )
 
 
