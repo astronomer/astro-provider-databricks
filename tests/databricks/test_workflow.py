@@ -24,9 +24,7 @@ expected_workflow_json = {
                 {"tg_index": {"package": "tg_package"}},
             ],
             "notebook_task": {
-                "base_parameters": {
-                    "notebook_path": "/foo/bar"
-                },
+                "base_parameters": {"notebook_path": "/foo/bar"},
                 "notebook_path": "/foo/bar",
                 "source": "WORKSPACE",
             },
@@ -39,10 +37,7 @@ expected_workflow_json = {
             "job_cluster_key": "foo",
             "libraries": [{"tg_index": {"package": "tg_package"}}],
             "notebook_task": {
-                "base_parameters": {
-                    "foo": "bar",
-                    "notebook_path": "/foo/bar"
-                },
+                "base_parameters": {"foo": "bar", "notebook_path": "/foo/bar"},
                 "notebook_path": "/foo/bar",
                 "source": "WORKSPACE",
             },
@@ -207,18 +202,17 @@ def test_create_workflow_from_notebooks_job_templates_notebook_jobs(
         "ds": "yyyy-mm-dd",
         "ts": "hh:mm",
         "ti": mock.MagicMock(),
-        "expanded_ti_count": 0
+        "expanded_ti_count": 0,
     }
     task_group.children["test_workflow.launch"].execute(context=context)
     assert mock_get_run.call_count == 3
     assert "Job state: BLOCKED" in caplog.messages
 
-    notebook_job_parameters = mock_create_job.call_args.kwargs["json"]["tasks"][0]["notebook_task"][
-        "base_parameters"
-    ]
+    notebook_job_parameters = mock_create_job.call_args.kwargs["json"]["tasks"][0][
+        "notebook_task"
+    ]["base_parameters"]
     assert notebook_job_parameters["ds"] == "yyyy-mm-dd"
     assert notebook_job_parameters["ts"] == "hh:mm"
-    
 
 
 @mock.patch("astro_databricks.operators.workflow.DatabricksHook")

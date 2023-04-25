@@ -145,7 +145,10 @@ class DatabricksNotebookOperator(BaseOperator):
             self.databricks_task_group,
             "notebook_params",
         ):
-            self.notebook_params = {**self.notebook_params, **self.databricks_task_group.notebook_params}
+            self.notebook_params = {
+                **self.notebook_params,
+                **self.databricks_task_group.notebook_params,
+            }
         if context:
             # The following exception currently only happens on Airflow 2.3, with the following error:
             # airflow.exceptions.AirflowException: XComArg result from test_workflow.launch at example_databricks_workflow with key="return_value" is not found!

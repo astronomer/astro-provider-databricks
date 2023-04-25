@@ -82,9 +82,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
     all notebook tasks in the workflow.
     """
 
-    template_fields = (
-        "notebook_params",
-    )
+    template_fields = ("notebook_params",)
 
     operator_extra_links = (DatabricksJobRunLink(), DatabricksJobRepairAllFailedLink())
     databricks_conn_id: str
@@ -400,7 +398,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
             job_clusters=self.job_clusters,
             existing_clusters=self.existing_clusters,
             extra_job_params=self.extra_job_params,
-            notebook_params=self.notebook_params
+            notebook_params=self.notebook_params,
         )
 
         for task in tasks:
