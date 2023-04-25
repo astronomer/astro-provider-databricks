@@ -24,7 +24,9 @@ expected_workflow_json = {
                 {"tg_index": {"package": "tg_package"}},
             ],
             "notebook_task": {
-                "base_parameters": {},
+                "base_parameters": {
+                    "notebook_path": "/foo/bar"
+                },
                 "notebook_path": "/foo/bar",
                 "source": "WORKSPACE",
             },
@@ -37,7 +39,10 @@ expected_workflow_json = {
             "job_cluster_key": "foo",
             "libraries": [{"tg_index": {"package": "tg_package"}}],
             "notebook_task": {
-                "base_parameters": {"foo": "bar"},
+                "base_parameters": {
+                    "foo": "bar",
+                    "notebook_path": "/foo/bar"
+                },
                 "notebook_path": "/foo/bar",
                 "source": "WORKSPACE",
             },
@@ -65,7 +70,7 @@ def test_create_workflow_from_notebooks_raises_exception_due_to_job_being_skippe
             group_id="test_workflow",
             databricks_conn_id="foo",
             job_clusters=[{"job_cluster_key": "foo"}],
-            notebook_params=[{"notebook_path": "/foo/bar"}],
+            notebook_params={"notebook_path": "/foo/bar"},
             notebook_packages=[{"tg_index": {"package": "tg_package"}}],
         )
         with task_group:
@@ -113,7 +118,7 @@ def test_create_workflow_from_notebooks_with_create(
             group_id="test_workflow",
             databricks_conn_id="foo",
             job_clusters=[{"job_cluster_key": "foo"}],
-            notebook_params=[{"notebook_path": "/foo/bar"}],
+            notebook_params={"notebook_path": "/foo/bar"},
             notebook_packages=[{"tg_index": {"package": "tg_package"}}],
         )
         with task_group:
@@ -145,7 +150,7 @@ def test_create_workflow_from_notebooks_with_create(
     mock_jobs_api.return_value.run_now.assert_called_once_with(
         job_id=1,
         jar_params=[],
-        notebook_params=[{"notebook_path": "/foo/bar"}],
+        notebook_params={"notebook_path": "/foo/bar"},
         python_params=[],
         spark_submit_params=[],
     )
@@ -181,7 +186,7 @@ def test_create_workflow_from_notebooks_job_templates_notebook_jobs(
             group_id="test_workflow",
             databricks_conn_id="foo",
             job_clusters=[{"job_cluster_key": "foo"}],
-            notebook_params=[{"notebook_path": "/foo/bar"}],
+            notebook_params={"notebook_path": "/foo/bar", "ts": "{{ ts }}"},
             notebook_packages=[{"tg_index": {"package": "tg_package"}}],
         )
         with task_group:
@@ -190,7 +195,7 @@ def test_create_workflow_from_notebooks_job_templates_notebook_jobs(
                 databricks_conn_id="foo",
                 notebook_path="/foo/bar",
                 notebook_packages=[{"nb_index": {"package": "nb_package"}}],
-                notebook_params=[{"ds": "{{ ds }}"}],
+                notebook_params={"ds": "{{ ds }}"},
                 source="WORKSPACE",
                 job_cluster_key="foo",
             )
@@ -198,16 +203,22 @@ def test_create_workflow_from_notebooks_job_templates_notebook_jobs(
             notebook_1
 
     assert len(task_group.children) == 2
-    context = {"ds": "yyyy-mm-dd", "ti": mock.MagicMock(), "expanded_ti_count": 0}
+    context = {
+        "ds": "yyyy-mm-dd",
+        "ts": "hh:mm",
+        "ti": mock.MagicMock(),
+        "expanded_ti_count": 0
+    }
     task_group.children["test_workflow.launch"].execute(context=context)
     assert mock_get_run.call_count == 3
     assert "Job state: BLOCKED" in caplog.messages
-    assert (
-        mock_create_job.call_args.kwargs["json"]["tasks"][0]["notebook_task"][
-            "base_parameters"
-        ][0]["ds"]
-        == "yyyy-mm-dd"
-    )
+
+    notebook_job_parameters = mock_create_job.call_args.kwargs["json"]["tasks"][0]["notebook_task"][
+        "base_parameters"
+    ]
+    assert notebook_job_parameters["ds"] == "yyyy-mm-dd"
+    assert notebook_job_parameters["ts"] == "hh:mm"
+    
 
 
 @mock.patch("astro_databricks.operators.workflow.DatabricksHook")
@@ -243,7 +254,7 @@ def test_create_workflow_with_arbitrary_extra_job_params(
             group_id="test_workflow",
             databricks_conn_id="foo",
             job_clusters=[{"job_cluster_key": "foo"}],
-            notebook_params=[{"notebook_path": "/foo/bar"}],
+            notebook_params={"notebook_path": "/foo/bar"},
             extra_job_params=extra_job_params,
         )
         with task_group:

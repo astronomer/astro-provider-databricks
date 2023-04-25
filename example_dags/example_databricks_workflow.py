@@ -61,7 +61,7 @@ with dag:
         group_id=f"test_workflow_{USER}_{GROUP_ID}",
         databricks_conn_id=DATABRICKS_CONN_ID,
         job_clusters=job_cluster_spec,
-        notebook_params={},
+        notebook_params={"ts": "{{ ts }}"},
         notebook_packages=[
             {
                 "pypi": {

@@ -40,7 +40,7 @@ class DatabricksNotebookOperator(BaseOperator):
                 group_id="test_workflow",
                 databricks_conn_id="databricks_conn",
                 job_clusters=job_cluster_spec,
-                notebook_params=[],
+                notebook_params={},
             )
             with task_group:
                 notebook_1 = DatabricksNotebookOperator(
@@ -135,12 +135,17 @@ class DatabricksNotebookOperator(BaseOperator):
         """
         Convert the operator to a Databricks workflow task that can be a task in a workflow
         """
-        if self.databricks_task_group and (
+        if self.databricks_task_group and hasattr(
             self.databricks_task_group,
             "notebook_packages",
         ):
             self.notebook_packages.extend(self.databricks_task_group.notebook_packages)
 
+        if self.databricks_task_group and hasattr(
+            self.databricks_task_group,
+            "notebook_params",
+        ):
+            self.notebook_params = {**self.notebook_params, **self.databricks_task_group.notebook_params}
         if context:
             # The following exception currently only happens on Airflow 2.3, with the following error:
             # airflow.exceptions.AirflowException: XComArg result from test_workflow.launch at example_databricks_workflow with key="return_value" is not found!

@@ -78,7 +78,13 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
     be populated after initialization by calling add_task.
     :param extra_job_params: A dictionary containing properties which will override the
     default Databricks Workflow Job definitions.
+    :param notebook_params:  A dictionary of notebook parameters to pass to the workflow.These parameters will be passed to
+    all notebook tasks in the workflow.
     """
+
+    template_fields = (
+        "notebook_params",
+    )
 
     operator_extra_links = (DatabricksJobRunLink(), DatabricksJobRepairAllFailedLink())
     databricks_conn_id: str
@@ -94,6 +100,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         max_concurrent_runs: int = 1,
         tasks_to_convert: list[BaseOperator] = None,
         extra_job_params: dict[str, Any] = None,
+        notebook_params: dict = None,
         **kwargs,
     ):
         self.existing_clusters = existing_clusters or []
@@ -105,6 +112,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         self.databricks_run_id = None
         self.max_concurrent_runs = max_concurrent_runs
         self.extra_job_params = extra_job_params or {}
+        self.notebook_params = notebook_params or {}
         super().__init__(task_id=task_id, **kwargs)
 
         # For Airflow versions <2.3, the `task_group` attribute is unassociated, and hence we need to add that.
@@ -180,7 +188,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         run_id = jobs_api.run_now(
             job_id=job_id,
             jar_params=self.task_group.jar_params,
-            notebook_params=self.task_group.notebook_params,
+            notebook_params=self.notebook_params,
             python_params=self.task_group.python_params,
             spark_submit_params=self.task_group.spark_submit_params,
         )["run_id"]
@@ -250,7 +258,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
             group_id="test_workflow",
             databricks_conn_id="databricks_conn",
             job_clusters=job_cluster_spec,
-            notebook_params=[],
+            notebook_params={},
             notebook_packages=[
                 {
                     "pypi": {
@@ -299,7 +307,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
     :param group_id: The name of the task group
     :param databricks_conn_id: The name of the databricks connection to use
     :param job_clusters: A list of job clusters to use for this workflow.
-    :param notebook_params: A list of notebook parameters to pass to the workflow.These parameters will be passed to
+    :param notebook_params: A dictionary of notebook parameters to pass to the workflow.These parameters will be passed to
     all notebook tasks in the workflow.
     :param notebook_packages: A list of dictionary of Python packages to be installed. Packages defined at the
     workflow task group level are installed for each of the notebook tasks under it. And packages defined at the
@@ -331,7 +339,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
         existing_clusters=None,
         job_clusters=None,
         jar_params: dict = None,
-        notebook_params: list = None,
+        notebook_params: dict = None,
         notebook_packages: list[dict[str, Any]] = None,
         python_params: list = None,
         spark_submit_params: list = None,
@@ -345,14 +353,14 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
         :param group_id: The name of the task group
         :param databricks_conn_id: The name of the databricks connection to use
         :param job_clusters: A list of job clusters to use for this workflow.
-        :param notebook_params: A list of notebook parameters to pass to the workflow.These parameters will be passed to
+        :param notebook_params: A dictionary of notebook parameters to pass to the workflow.These parameters will be passed to
         all notebook tasks in the workflow.
         :param notebook_packages: A list of dictionary of Python packages to be installed. These packages will be passed
          to all notebook tasks in the workflow.
         :param jar_params: A list of jar parameters to pass to the workflow.
          These parameters will be passed to all jar tasks
         in the workflow.
-        :param python_params: A list of python parameters to pass to the workflow.
+        :param python_params: A dictionary of python parameters to pass to the workflow.
          These parameters will be passed to all python tasks
         in the workflow.
         :param spark_submit_params: A list of spark submit parameters to pass to the workflow.
@@ -364,7 +372,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
         self.databricks_conn_id = databricks_conn_id
         self.existing_clusters = existing_clusters or []
         self.job_clusters = job_clusters or []
-        self.notebook_params = notebook_params or []
+        self.notebook_params = notebook_params or {}
         self.notebook_packages = notebook_packages or []
         self.python_params = python_params or []
         self.spark_submit_params = spark_submit_params or []
@@ -392,6 +400,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
             job_clusters=self.job_clusters,
             existing_clusters=self.existing_clusters,
             extra_job_params=self.extra_job_params,
+            notebook_params=self.notebook_params
         )
 
         for task in tasks:
