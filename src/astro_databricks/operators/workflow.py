@@ -98,7 +98,7 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         max_concurrent_runs: int = 1,
         tasks_to_convert: list[BaseOperator] = None,
         extra_job_params: dict[str, Any] = None,
-        notebook_params: dict = None,
+        notebook_params: dict | None = None,
         **kwargs,
     ):
         self.existing_clusters = existing_clusters or []
@@ -305,7 +305,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
     :param group_id: The name of the task group
     :param databricks_conn_id: The name of the databricks connection to use
     :param job_clusters: A list of job clusters to use for this workflow.
-    :param notebook_params: A dictionary of notebook parameters to pass to the workflow.These parameters will be passed to
+    :param notebook_params: A dictionary of notebook parameters to pass to the workflow. These parameters will be passed to
     all notebook tasks in the workflow.
     :param notebook_packages: A list of dictionary of Python packages to be installed. Packages defined at the
     workflow task group level are installed for each of the notebook tasks under it. And packages defined at the
@@ -337,7 +337,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
         existing_clusters=None,
         job_clusters=None,
         jar_params: dict = None,
-        notebook_params: dict = None,
+        notebook_params: dict | None = None,
         notebook_packages: list[dict[str, Any]] = None,
         python_params: list = None,
         spark_submit_params: list = None,
