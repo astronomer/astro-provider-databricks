@@ -92,3 +92,18 @@ hatch will automatically update the version for you. Then, create a new release 
 
 .. note::
     You can update the version in a few different ways. Check out the `hatch docs <https://hatch.pypa.io/latest/version/#updating>`_ to learn more.
+
+
+To validate a release locally, it is possible to build it using:
+
+.. code-block:: bash
+
+    hatch build
+
+To publish a release to PyPI, use:
+
+.. code-block:: bash
+
+    hatch publish
+
+
