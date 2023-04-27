@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "astro-provider-databricks"
-version = "0.1.2"
+dynamic = ["version"]
 description = "Affordable Databricks Workflows in Apache Airflow"
 readme = "README.md"
 license = "Apache-2.0"
