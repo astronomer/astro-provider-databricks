@@ -20,6 +20,8 @@ DATABRICKS_NOTIFICATION_EMAIL = os.getenv(
 DATABRICKS_DESTINATION_ID = os.getenv(
     "ASTRO_DATABRICKS_DESTINATION_ID", "b0aea8ab-ea8c-4a45-a2e9-9a26753fd702"
 )
+
+USER = os.environ.get("USER")
 GROUP_ID = os.getenv("DATABRICKS_GROUP_ID", "1234").replace(".", "_")
 USER = os.environ.get("USER")
 
@@ -59,7 +61,7 @@ with dag:
         group_id=f"test_workflow_{USER}_{GROUP_ID}",
         databricks_conn_id=DATABRICKS_CONN_ID,
         job_clusters=job_cluster_spec,
-        notebook_params=[],
+        notebook_params={"ts": "{{ ts }}"},
         notebook_packages=[
             {
                 "pypi": {
@@ -93,9 +95,7 @@ with dag:
             notebook_path="/Shared/Notebook_2",
             source="WORKSPACE",
             job_cluster_key="Shared_job_cluster",
-            notebook_params={
-                "foo": "bar",
-            },
+            notebook_params={"foo": "bar", "ds": "{{ ds }}"},
         )
         notebook_1 >> notebook_2
     # [END howto_databricks_workflow_notebook]

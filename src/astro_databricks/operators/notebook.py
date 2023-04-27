@@ -40,7 +40,7 @@ class DatabricksNotebookOperator(BaseOperator):
                 group_id="test_workflow",
                 databricks_conn_id="databricks_conn",
                 job_clusters=job_cluster_spec,
-                notebook_params=[],
+                notebook_params={},
             )
             with task_group:
                 notebook_1 = DatabricksNotebookOperator(
@@ -77,7 +77,10 @@ class DatabricksNotebookOperator(BaseOperator):
         DatabricksJobRunLink(),
         DatabricksJobRepairSingleFailedLink(),
     )
-    template_fields = ("databricks_metadata",)
+    template_fields = (
+        "databricks_metadata",
+        "notebook_params",
+    )
 
     def __init__(
         self,
@@ -127,16 +130,33 @@ class DatabricksNotebookOperator(BaseOperator):
         }
 
     def convert_to_databricks_workflow_task(
-        self, relevant_upstreams: list[BaseOperator]
+        self, relevant_upstreams: list[BaseOperator], context: Context | None = None
     ):
         """
         Convert the operator to a Databricks workflow task that can be a task in a workflow
         """
-        if self.databricks_task_group and (
+        if self.databricks_task_group and hasattr(
             self.databricks_task_group,
             "notebook_packages",
         ):
             self.notebook_packages.extend(self.databricks_task_group.notebook_packages)
+
+        if self.databricks_task_group and hasattr(
+            self.databricks_task_group,
+            "notebook_params",
+        ):
+            self.notebook_params = {
+                **self.notebook_params,
+                **self.databricks_task_group.notebook_params,
+            }
+        if context:
+            # The following exception currently only happens on Airflow 2.3, with the following error:
+            # airflow.exceptions.AirflowException: XComArg result from test_workflow.launch at example_databricks_workflow with key="return_value" is not found!
+            try:
+                self.render_template_fields(context)
+            except AirflowException:
+                self.log.exception("Unable to process template fields")
+
         base_task_json = self._get_task_base_json()
         result = {
             "task_key": self._get_databricks_task_id(self.task_id),
@@ -254,7 +274,14 @@ class DatabricksNotebookOperator(BaseOperator):
         :return:
         """
         if self.databricks_task_group:
-            # if we are in a workflow, we assume there is a metadata from the launch task
+            # if we are in a workflow, we assume there is an upstream launch task
+            if not self.databricks_metadata:
+                launch_task_id = [
+                    task for task in self.upstream_task_ids if task.endswith(".launch")
+                ][0]
+                self.databricks_metadata = context["ti"].xcom_pull(
+                    task_ids=launch_task_id
+                )
             databricks_metadata = DatabricksMetaData(**self.databricks_metadata)
             self.databricks_run_id = databricks_metadata.databricks_run_id
             self.databricks_conn_id = databricks_metadata.databricks_conn_id
