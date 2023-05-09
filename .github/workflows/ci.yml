@@ -224,6 +224,6 @@ jobs:
     - run: pip3 install hatch
     - run: hatch build
     - run: hatch publish
-    env:
-      HATCH_INDEX_USER: __token__
-      HATCH_INDEX_AUTH: ${{ secrets.PYPI_PASSWORD }}
+    env:  # Hatch uses the twine library under the hood for publishing packages, so this works:
+      TWINE_USERNAME: __token__
+      TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
