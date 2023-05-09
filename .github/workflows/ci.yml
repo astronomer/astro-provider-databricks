@@ -24,7 +24,7 @@ env:
 
 jobs:
   Markdown-Link-Check:
-    if: github.event.action != 'labeled'
+    #if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -223,7 +223,7 @@ jobs:
         architecture: 'x64'
     - run: pip3 install hatch
     - run: hatch build
-    - run: hatch publish -u ${{ secrets.HATCH_INDEX_USER }} -a ${{ HATCH_INDEX_AUTH }} -y
+    - run: hatch publish -u __token__ -a ${{ secrets.PYPI_PASSWORD }} -y
     env:
       HATCH_INDEX_USER: __token__
       HATCH_INDEX_AUTH: ${{ secrets.PYPI_PASSWORD }}
