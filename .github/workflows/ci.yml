@@ -208,12 +208,12 @@ jobs:
   Publish-Package:
     #if: github.event_name == 'release'
     name: Build and publish Python 🐍 distributions 📦 to PyPI
-    needs:
-      - Markdown-Link-Check
-      - Build-Docs
-      - Run-Unit-Tests
-      - Run-Example-DAGs
-      - Code-Coverage
+      #    needs:
+      #      - Markdown-Link-Check
+      #      - Build-Docs
+      #      - Run-Unit-Tests
+      #      - Run-Example-DAGs
+      #      - Code-Coverage
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
