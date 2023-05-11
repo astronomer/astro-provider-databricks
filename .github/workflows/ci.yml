@@ -223,7 +223,7 @@ jobs:
         architecture: 'x64'
     - run: pip3 install hatch
     - run: hatch build
-    - run: hatch publish -u __token__ -a ${{ secrets.PYPI_PASSWORD }} -y
+    - run: hatch publish -u __token__ -a ${{ secrets.PYPI_TOKEN }} -y
     env:
       HATCH_INDEX_USER: __token__
-      HATCH_INDEX_AUTH: ${{ secrets.PYPI_PASSWORD }}
+      HATCH_INDEX_AUTH: ${{ secrets.PYPI_TOKEN }}
