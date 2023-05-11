@@ -24,7 +24,7 @@ env:
 
 jobs:
   Markdown-Link-Check:
-    #if: github.event.action != 'labeled'
+    if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
