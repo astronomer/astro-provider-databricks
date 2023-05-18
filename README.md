@@ -34,20 +34,7 @@ job_cluster_spec = [
       "job_cluster_key": "astro_databricks",
       "new_cluster": {
          "cluster_name": "",
-         "spark_version": "11.3.x-scala2.12",
-         "aws_attributes": {
-               "first_on_demand": 1,
-               "availability": "SPOT_WITH_FALLBACK",
-               "zone_id": "us-east-2b",
-               "spot_bid_price_percent": 100,
-               "ebs_volume_count": 0,
-         },
-         "node_type_id": "i3.xlarge",
-         "spark_env_vars": {"PYSPARK_PYTHON": "/databricks/python3/bin/python3"},
-         "enable_elastic_disk": False,
-         "data_security_mode": "LEGACY_SINGLE_USER_STANDARD",
-         "runtime_engine": "STANDARD",
-         "num_workers": 8,
+         # ...
       },
    }
 ]
@@ -62,7 +49,6 @@ def databricks_workflow_example():
       # you can specify common fields here that get shared to all notebooks
       notebook_packages=[
          { "pypi": { "package": "pandas" } },
-         { "pypi": { "package": "numpy" } },
       ],
       # notebook_params supports templating
       notebook_params={
@@ -71,6 +57,7 @@ def databricks_workflow_example():
    ):
       notebook_1 = DatabricksNotebookOperator(
          task_id="notebook_1",
+         databricks_conn_id="databricks_default",
          notebook_path="/Shared/notebook_1",
          source="WORKSPACE",
          # job_cluster_key corresponds to the job_cluster_key in the job_cluster_spec
@@ -89,6 +76,7 @@ def databricks_workflow_example():
       def inner_task_group():
          notebook_2 = DatabricksNotebookOperator(
             task_id="notebook_2",
+            databricks_conn_id="databricks_default",
             notebook_path="/Shared/notebook_2",
             source="WORKSPACE",
             job_cluster_key="astro_databricks",
@@ -96,6 +84,7 @@ def databricks_workflow_example():
 
          notebook_3 = DatabricksNotebookOperator(
             task_id="notebook_3",
+            databricks_conn_id="databricks_default",
             notebook_path="/Shared/notebook_3",
             source="WORKSPACE",
             job_cluster_key="astro_databricks",
@@ -103,6 +92,7 @@ def databricks_workflow_example():
 
       notebook_4 = DatabricksNotebookOperator(
          task_id="notebook_4",
+         databricks_conn_id="databricks_default",
          notebook_path="/Shared/notebook_4",
          source="WORKSPACE",
          job_cluster_key="astro_databricks",
@@ -112,6 +102,13 @@ def databricks_workflow_example():
 
 databricks_workflow_example_dag = databricks_workflow_example()
 ```
+
+## Quickstart
+
+Check out the following quickstart guides:
+
+- [With the Astro CLI](quickstart/astro-cli.md)
+- [Without the Astro CLI](quickstart/without-astro-cli.md)
 
 ## Documentation
 
