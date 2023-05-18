@@ -2,7 +2,7 @@
   Databricks Workflows in Airflow
 </h1>
 
-The Astro Databricks Provider is an Apache Airflow provider to run your Databricks notebooks as Databricks Workflows while maintaining Airflow as the authoring interface. Running your Databricks notebooks as Databricks Workflows can result in a [75% cost reduction](https://www.databricks.com/product/aws-pricing) ($0.40/DBU for all-purpose compute, $0.10/DBU for Jobs compute).
+The Astro Databricks Provider is an Apache Airflow provider to write Databricks Workflows using Airflow as the authoring interface. Running your Databricks notebooks as Databricks Workflows can result in a [75% cost reduction](https://www.databricks.com/product/pricing) ($0.40/DBU for all-purpose compute, $0.07/DBU for Jobs compute).
 
 There are a few advantages to defining your Databricks Workflows in Airflow:
 
