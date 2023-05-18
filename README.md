@@ -27,7 +27,7 @@ from pendulum import datetime
 from airflow.decorators import dag, task_group
 from astro_databricks import DatabricksNotebookOperator, DatabricksWorkflowTaskGroup
 
-# define your cluster spec - can have 1 to many clusters
+# define your cluster spec - can have from 1 to many clusters
 job_cluster_spec = [
    {
       "job_cluster_key": "astro_databricks",
