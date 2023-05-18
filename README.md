@@ -11,7 +11,6 @@ There are a few advantages to defining your Databricks Workflows in Airflow:
 
 |                          | Databricks Workflows via Databricks | Databricks Workflows via Airflow |
 | :----------------------- | :---------------------------------: | :------------------------------: |
-| ------------------------ | ----------------------------------- | -------------------------------- |
 | **Authoring Interface**  |     Web-based via Databricks UI     |       Code via Airflow DAG       |
 | **Version Control**      |                                     |                ✅                |
 | **Retry from Beginning** |                 ✅                  |                ✅                |
