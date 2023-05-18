@@ -9,13 +9,13 @@ The **Astro Databricks Provider** is an [Apache Airflow](https://github.com/apac
 
 There are a few advantages to defining your Databricks Workflows in Airflow:
 
-|                          | Databricks Workflows via Databricks | Databricks Workflows via Airflow |
-| :----------------------- | :---------------------------------: | :------------------------------: |
-| **Authoring Interface**  |     Web-based via Databricks UI     |       Code via Airflow DAG       |
-| **Version Control**      |                                     |                ✅                |
-| **Retry from Beginning** |                 ✅                  |                ✅                |
-| **Retry Single Task**    |                                     |                ✅                |
-| **Task Groups**          |                                     |                ✅                |
+|                          |        via Databricks         |      via Airflow       |
+| :----------------------- | :---------------------------: | :--------------------: |
+| **Authoring Interface**  | _Web-based via Databricks UI_ | _Code via Airflow DAG_ |
+| **Version Control**      |                               |           ✅           |
+| **Retry from Beginning** |              ✅               |           ✅           |
+| **Retry Single Task**    |                               |           ✅           |
+| **Task Groups**          |                               |           ✅           |
 
 ## Example
 
