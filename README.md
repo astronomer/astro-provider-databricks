@@ -116,11 +116,11 @@ databricks_workflow_example_dag = databricks_workflow_example()
 
 ### Airflow UI
 
-![Airflow UI](https://raw.githubusercontent.com/astronomer/astro-provider-databricks/main/docs/_static/workflow_1_airflow.png)
+![Airflow UI](https://raw.githubusercontent.com/astronomer/astro-provider-databricks/main/docs/_static/screenshots/workflow_1_airflow.png)
 
 ### Databricks UI
 
-![Databricks UI](https://raw.githubusercontent.com/astronomer/astro-provider-databricks/main/docs/_static/workflow_1_databricks.png)
+![Databricks UI](https://raw.githubusercontent.com/astronomer/astro-provider-databricks/main/docs/_static/screenshots/workflow_1_databricks.png)
 
 ## Quickstart
 
