@@ -26,6 +26,7 @@ The following Airflow DAG illustrates how to use the `DatabricksTaskGroup` and `
 from pendulum import datetime
 
 from airflow.decorators import dag, task_group
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from astro_databricks import DatabricksNotebookOperator, DatabricksWorkflowTaskGroup
 
 # define your cluster spec - can have from 1 to many clusters
@@ -100,8 +101,24 @@ def databricks_workflow_example():
 
       notebook_1 >> inner_task_group() >> notebook_4
 
+   trigger_workflow_2 = TriggerDagRunOperator(
+      task_id="trigger_workflow_2",
+      trigger_dag_id="workflow_2",
+      execution_date="{{ next_execution_date }}",
+   )
+
+   workflow >> trigger_workflow_2
+
 databricks_workflow_example_dag = databricks_workflow_example()
 ```
+
+### Airflow UI
+
+![Airflow UI](https://raw.githubusercontent.com/astronomer/astro-provider-databricks/main/docs/_static/workflow_1_airflow.png)
+
+### Databricks UI
+
+![Databricks UI](https://raw.githubusercontent.com/astronomer/astro-provider-databricks/main/docs/_static/workflow_1_databricks.png)
 
 ## Quickstart
 
