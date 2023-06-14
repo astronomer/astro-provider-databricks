@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import nox
+from packaging import version
 
 nox.options.sessions = ["dev"]
 nox.options.reuse_existing_virtualenvs = True
@@ -36,8 +37,13 @@ def test(session: nox.Session, airflow) -> None:
         "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.* astro_databricks\\.*",
     }
 
+    if version.parse(airflow) < version.parse("2.4"):
+        session.install("apache-airflow-providers-databricks<4.2")
+
     session.install("-e", ".[tests]")
     session.install(f"apache-airflow=={airflow}")
+    # Workaround to the issue:
+    # RuntimeError: The package `apache-airflow-providers-databricks:4.2.0` requires Apache Airflow 2.4.0+
 
     # Log all the installed dependencies
     session.log("Installed Dependencies:")

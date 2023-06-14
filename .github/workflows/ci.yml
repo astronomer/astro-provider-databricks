@@ -51,7 +51,7 @@ jobs:
 #            ~/.cache/pip
 #            .nox
 #          key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
-#      - run: pip3 install nox
+#      - run: pip3 install nox packaging
 #      - run: nox -s type_check
 
   Build-Docs:
@@ -69,7 +69,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
-      - run: pip3 install nox
+      - run: pip3 install nox packaging
       - run: nox -s build_docs
 
   Run-Unit-Tests:
@@ -111,7 +111,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: unit-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('pyproject.toml') }}-version-${{ hashFiles('src/astro_databricks/__init__.py') }}
-      - run: pip3 install nox
+      - run: pip3 install nox packaging
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- --ignore "tests/test_example_dags.py" --cov-report=xml
       - name: Upload coverage
         uses: actions/upload-artifact@v2
@@ -162,7 +162,7 @@ jobs:
           key: example-dags-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('pyproject.toml') }}-version-${{ hashFiles('src/astro_databricks/__init__.py') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
-      - run: pip3 install nox
+      - run: pip3 install nox packaging
       - run: DATABRICKS_GROUP_ID="${{github.run_id}}_${{matrix.python}}_${{matrix.airflow}}" nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- "tests/test_example_dags.py" --cov-report=xml
       - name: Upload coverage
         uses: actions/upload-artifact@v2
