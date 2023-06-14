@@ -129,6 +129,25 @@ class DatabricksNotebookOperator(BaseOperator):
             "libraries": self.notebook_packages,
         }
 
+    def merge_notebook_packages(self):
+        """
+        Merge the task group notebook packages into the notebook's packages, without adding any identical duplicates.
+
+        Example value for self.notebook_packages:
+        [
+            {"pypi": {"package": "requests_toolbelt==1.0.0"}}
+        ]
+
+        """
+        for task_group_package in self.databricks_task_group.notebook_packages:
+            exists = False
+            for existing_package in self.notebook_packages:
+                if task_group_package == existing_package:
+                    exists = True
+                    break
+            if not exists:
+                self.notebook_packages.append(task_group_package)
+
     def convert_to_databricks_workflow_task(
         self, relevant_upstreams: list[BaseOperator], context: Context | None = None
     ):
@@ -139,7 +158,7 @@ class DatabricksNotebookOperator(BaseOperator):
             self.databricks_task_group,
             "notebook_packages",
         ):
-            self.notebook_packages.extend(self.databricks_task_group.notebook_packages)
+            self.merge_notebook_packages()
 
         if self.databricks_task_group and hasattr(
             self.databricks_task_group,
