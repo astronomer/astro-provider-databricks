@@ -5,6 +5,9 @@ from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
 
 DATABRICKS_CONN = "databricks_conn"
+USER = os.environ.get("USER")
+GROUP_ID = os.getenv("DATABRICKS_GROUP_ID", "1234").replace(".", "_")
+USER = os.environ.get("USER")
 job_clusters = [
     {
         "job_cluster_key": "Shared_job_cluster",
@@ -38,7 +41,7 @@ job_clusters = [
 )
 def example_task_group():
     with DatabricksWorkflowTaskGroup(
-        group_id="example_task_group",
+        group_id=f"example_task_group_{USER}_{GROUP_ID}",
         databricks_conn_id=DATABRICKS_CONN,
         job_clusters=job_clusters,
         notebook_packages=[{"pypi": {"package": "simplejson"}}],
