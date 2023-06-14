@@ -63,12 +63,12 @@ jobs:
         with:
           python-version: '3.9'
           architecture: 'x64'
-      #- uses: actions/cache@v3
-      #  with:
-      #    path: |
-      #      ~/.cache/pip
-      #      .nox
-      #    key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
       - run: pip3 install nox packaging
       - run: nox -s build_docs
 
@@ -105,12 +105,12 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           architecture: 'x64'
-      #- uses: actions/cache@v3
-      #  with:
-      #    path: |
-      #      ~/.cache/pip
-      #      .nox
-      #    key: unit-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('pyproject.toml') }}-version-${{ hashFiles('src/astro_databricks/__init__.py') }}
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: unit-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('pyproject.toml') }}-version-${{ hashFiles('src/astro_databricks/__init__.py') }}
       - run: pip3 install nox packaging
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- --ignore "tests/test_example_dags.py" --cov-report=xml
       - name: Upload coverage
@@ -154,12 +154,12 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           architecture: 'x64'
-      #- uses: actions/cache@v3
-      #  with:
-      #    path: |
-      #      ~/.cache/pip
-      #      .nox
-      #    key: example-dags-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('pyproject.toml') }}-version-${{ hashFiles('src/astro_databricks/__init__.py') }}
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: example-dags-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('pyproject.toml') }}-version-${{ hashFiles('src/astro_databricks/__init__.py') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox packaging
