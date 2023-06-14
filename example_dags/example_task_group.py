@@ -2,8 +2,11 @@ import os
 from datetime import datetime
 
 from airflow.decorators import dag, task_group
+from airflow.utils.task_group import TaskGroup
+
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
+
 
 DATABRICKS_CONN = "databricks_conn"
 USER = os.environ.get("USER")
@@ -41,12 +44,13 @@ job_clusters = [
 
 )
 def example_task_group():
-    with DatabricksWorkflowTaskGroup(
+    databricks_task_group = DatabricksWorkflowTaskGroup(
         group_id=f"example_task_group_{USER}_{GROUP_ID}",
         databricks_conn_id=DATABRICKS_CONN,
         job_clusters=job_clusters,
         notebook_packages=[{"pypi": {"package": "simplejson"}}],
-    ):
+    )
+    with databricks_task_group:
         nb_1 = DatabricksNotebookOperator(
             task_id="nb_1",
             databricks_conn_id=DATABRICKS_CONN,
@@ -56,8 +60,7 @@ def example_task_group():
             notebook_packages=[{"pypi": {"package": "Faker"}}],
         )
 
-        @task_group
-        def my_task_group():
+        with TaskGroup("my_task_group") as my_task_group:
             DatabricksNotebookOperator(
                 task_id="nb_2",
                 databricks_conn_id=DATABRICKS_CONN,
@@ -82,7 +85,7 @@ def example_task_group():
             job_cluster_key="Shared_job_cluster",
         )
 
-        nb_1 >> my_task_group() >> nb_4
+        nb_1 >> my_task_group >> nb_4
 
 
 example_task_group()

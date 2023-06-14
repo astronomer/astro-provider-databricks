@@ -155,7 +155,7 @@ class DatabricksNotebookOperator(BaseOperator):
         """
         Find the closest parent_group which is an instance of DatabricksWorkflowTaskGroup.
 
-        In the case of Airflow 2.2.4, inner Task Groups do not inherit properties from Parent Task Groups like more
+        In the case of Airflow 2.2.x, inner Task Groups do not inherit properties from Parent Task Groups like more
         recent versions of Airflow. This lead to the issue:
         https://github.com/astronomer/astro-provider-databricks/pull/47
         """
@@ -171,7 +171,7 @@ class DatabricksNotebookOperator(BaseOperator):
         """
         Convert the operator to a Databricks workflow task that can be a task in a workflow
         """
-        if airflow.__version__ == "2.2.4":
+        if airflow.__version__ in ("2.2.4", "2.2.5"):
             databricks_task_group = self.find_parent_databricks_workflow_task_group()
         else:
             databricks_task_group = self.databricks_task_group
