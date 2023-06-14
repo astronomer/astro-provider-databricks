@@ -4,10 +4,12 @@ from __future__ import annotations
 import time
 from typing import Any
 
+import airflow
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.utils.context import Context
+from airflow.utils.task_group import TaskGroup
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 
@@ -129,25 +131,58 @@ class DatabricksNotebookOperator(BaseOperator):
             "libraries": self.notebook_packages,
         }
 
+    def merge_notebook_packages(self, databricks_task_group: TaskGroup):
+        """
+        Merge the task group notebook packages into the notebook's packages, without adding any identical duplicates.
+        Modifies self.notebook_packages in place.
+
+        Example value for self.notebook_packages:
+        [
+            {"pypi": {"package": "requests_toolbelt==1.0.0"}}
+        ]
+
+        """
+        for task_group_package in databricks_task_group.notebook_packages:
+            exists = False
+            for existing_package in self.notebook_packages:
+                if task_group_package == existing_package:
+                    exists = True
+                    break
+            if not exists:
+                self.notebook_packages.append(task_group_package)
+
+    def find_parent_databricks_workflow_task_group(self):
+        """
+        Find the closest parent_group which is an instance of DatabricksWorkflowTaskGroup.
+
+        In the case of Airflow 2.2.x, inner Task Groups do not inherit properties from Parent Task Groups like more
+        recent versions of Airflow. This lead to the issue:
+        https://github.com/astronomer/astro-provider-databricks/pull/47
+        """
+        parent_group = self.task_group
+        while parent_group:
+            if parent_group.__class__.__name__ == "DatabricksWorkflowTaskGroup":
+                return parent_group
+            parent_group = parent_group._parent_group
+
     def convert_to_databricks_workflow_task(
         self, relevant_upstreams: list[BaseOperator], context: Context | None = None
     ):
         """
         Convert the operator to a Databricks workflow task that can be a task in a workflow
         """
-        if self.databricks_task_group and hasattr(
-            self.databricks_task_group,
-            "notebook_packages",
-        ):
-            self.notebook_packages.extend(self.databricks_task_group.notebook_packages)
+        if airflow.__version__ in ("2.2.4", "2.2.5"):
+            databricks_task_group = self.find_parent_databricks_workflow_task_group()
+        else:
+            databricks_task_group = self.databricks_task_group
 
-        if self.databricks_task_group and hasattr(
-            self.databricks_task_group,
-            "notebook_params",
-        ):
+        if databricks_task_group and hasattr(databricks_task_group, "notebook_packages"):
+            self.merge_notebook_packages(databricks_task_group)
+
+        if databricks_task_group and hasattr(databricks_task_group, "notebook_params"):
             self.notebook_params = {
                 **self.notebook_params,
-                **self.databricks_task_group.notebook_params,
+                **databricks_task_group.notebook_params,
             }
         if context:
             # The following exception currently only happens on Airflow 2.3, with the following error:
