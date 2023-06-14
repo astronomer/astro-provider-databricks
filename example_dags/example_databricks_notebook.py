@@ -9,6 +9,7 @@ from astro_databricks import DatabricksNotebookOperator
 EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
+    # Users are encouraged to use the repair feature, retries may fail:
     "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 0)),
     "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
 }
