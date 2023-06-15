@@ -6,7 +6,8 @@ import nox
 from packaging import version
 
 nox.options.sessions = ["dev"]
-nox.options.reuse_existing_virtualenvs = True
+nox.options.error_on_external_run = False
+# nox.options.reuse_existing_virtualenvs = True
 
 
 @nox.session(python="3.10")

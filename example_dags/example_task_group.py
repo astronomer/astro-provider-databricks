@@ -40,8 +40,8 @@ job_clusters = [
     schedule_interval="@daily",
     start_date=datetime(2021, 1, 1),
     catchup=False,
+    default_args={'retries': 0},  # Users are encouraged to use the repair feature, retries may fail
     tags=["astro-provider-databricks"],
-
 )
 def example_task_group():
     databricks_task_group = DatabricksWorkflowTaskGroup(
