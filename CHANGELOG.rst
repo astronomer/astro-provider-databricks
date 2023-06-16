@@ -1,6 +1,20 @@
 Changelog
 =========
 
+0.1.4 (23-06-16)
+----------------
+
+Bug fixes
+
+* Fix repairing tasks declared in inner task groups (PR `#49 <https://github.com/astronomer/astro-provider-databricks/pull/49>`_ by @tatiana)
+* Fix copying dependencies from task groups to tasks inside intermediate task groups (PR `#47 <https://github.com/astronomer/astro-provider-databricks/pull/47>`_ by @tatiana)
+
+
+Enhancements
+
+* Documentation improvements (PRs `#43 <https://github.com/astronomer/astro-provider-databricks/pull/43>`_ and `#44 <https://github.com/astronomer/astro-provider-databricks/pull/44>`_ by @jlaneve)
+
+
 0.1.3 (23-04-27)
 ----------------
 
