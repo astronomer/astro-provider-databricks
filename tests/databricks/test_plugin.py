@@ -9,10 +9,17 @@ from airflow import DAG
 from airflow.models.dagbag import DagBag
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstanceKey
+from airflow.operators.dummy import DummyOperator
 from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.utils.dates import days_ago
 from airflow.utils.db import create_session
 from airflow.utils.state import State
+from airflow.utils.task_group import TaskGroup
+from databricks_cli.sdk.service import JobsService
+
+
+from astro_databricks.operators.notebook import DatabricksNotebookOperator
+from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
 from astro_databricks.plugins.plugin import (
     DatabricksJobRepairAllFailedLink,
     DatabricksJobRepairSingleFailedLink,
@@ -21,9 +28,8 @@ from astro_databricks.plugins.plugin import (
     _get_dagrun,
     _get_databricks_task_id,
     _repair_task,
+    get_launch_task_id
 )
-from databricks_cli.sdk.service import JobsService
-
 
 @pytest.fixture
 def mock_dag():
@@ -333,3 +339,83 @@ def test_databricks_job_repair_single_failed_link(mock_get_airflow_app, dag):
     with patch("astro_databricks.plugins.plugin.XCom", mock_xcom):
         link.get_link(mock_task, dttm=None, ti_key=ti_key)
         f"/repair_databricks_job?dag_id={dag_id}&databricks_conn_id={databricks_conn_id}&databricks_run_id={databricks_run_id}&tasks_to_repair={_get_databricks_task_id(mock_task)}"
+
+
+@mock.patch("astro_databricks.operators.workflow.DatabricksHook")
+@mock.patch("astro_databricks.operators.workflow.ApiClient")
+@mock.patch("astro_databricks.operators.workflow.JobsApi")
+@mock.patch("astro_databricks.operators.workflow._get_job_by_name")
+@mock.patch(
+    "astro_databricks.operators.workflow.RunsApi.get_run",
+    return_value={"state": {"life_cycle_state": "RUNNING"}},
+)
+def test_create_workflow_with_nested_task_groups(
+    mock_run_api, mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag
+):
+    mock_get_jobs.return_value = {"job_id": 862519602273592}
+
+    extra_job_params = {
+        "timeout_seconds": 10,  # default: 0
+        "webhook_notifications": {
+            "on_failure": [{"id": "b0aea8ab-ea8c-4a45-a2e9-9a26753fd702"}],
+        },
+        "email_notifications": {
+            "no_alert_for_skipped_runs": True,  # default: False
+            "on_start": ["user.name@databricks.com"],
+        },
+        "git_source": {  # no default value
+            "git_url": "https://github.com/astronomer/astro-provider-databricks",
+            "git_provider": "gitHub",
+            "git_branch": "main",
+        },
+    }
+    with dag:
+        outer_task_group = DatabricksWorkflowTaskGroup(
+            group_id="test_workflow",
+            databricks_conn_id="foo",
+            job_clusters=[{"job_cluster_key": "foo"}],
+            notebook_params={"notebook_path": "/foo/bar"},
+            extra_job_params=extra_job_params,
+            notebook_packages=[
+                {"pypi": {"package": "mlflow==2.4.0"}},
+            ]
+        )
+        with outer_task_group:
+            direct_notebook = DatabricksNotebookOperator(
+                task_id="direct_notebook",
+                databricks_conn_id="foo",
+                notebook_path="/foo/bar",
+                source="WORKSPACE",
+                job_cluster_key="foo",
+            )
+
+            with TaskGroup("middle_task_group") as middle_task_group:
+                with TaskGroup("inner_task_group") as inner_task_group:
+                    inner_notebook = DatabricksNotebookOperator(
+                        task_id="inner_notebook",
+                        databricks_conn_id="foo",
+                        notebook_path="/foo/bar",
+                        source="WORKSPACE",
+                        job_cluster_key="foo",
+                    )
+                    inner_notebook
+                inner_task_group
+            direct_notebook >> middle_task_group
+
+    task_id = get_launch_task_id(outer_task_group)
+    assert task_id == "test_workflow.launch"
+
+def test_get_task_group_children(dag):
+    repair_all_link = DatabricksJobRepairAllFailedLink()
+    with dag:
+        with TaskGroup("parent_task_group") as parent_task_group:
+            parent_task = DummyOperator(task_id="parent_task")
+            with TaskGroup("inner_task_group") as inner_task_group:
+                inner_task = DummyOperator(task_id="inner_task")
+            parent_task >> inner_task_group
+
+    children = repair_all_link.get_task_group_children(parent_task_group)
+    children_keys = children.keys()
+    assert len(children_keys) == 2
+    assert 'parent_task_group.parent_task' in children_keys
+    assert 'parent_task_group.inner_task_group.inner_task' in children_keys

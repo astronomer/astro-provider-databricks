@@ -191,6 +191,23 @@ def get_task_group_legacy(operator: BaseOperator) -> TaskGroup:
     return find_my_group(operator.dag.task_group, operator.task_id)
 
 
+def get_launch_task_id(task_group: TaskGroup) -> str:
+    """
+    Retrieve the launch task ID from the current task group or a parent task group,
+    recursively.
+
+    :param task_group: Task Group to be inspected
+    :return: launch Task ID
+    """
+    try:
+        launch_task_id = task_group.get_child_by_label("launch").task_id
+        print("launch task id %s", launch_task_id)
+    except KeyError:
+        launch_task_id = get_launch_task_id(task_group.parent_group)
+
+    return launch_task_id
+
+
 def _get_launch_task_key(
     current_task_key: TaskInstanceKey, task_id: str
 ) -> TaskInstanceKey:
@@ -292,7 +309,7 @@ class DatabricksJobRunLink(BaseOperatorLink, LoggingMixin):
             self.log.debug(
                 "Finding the launch task for job run metadata %s", ti_key.task_id
             )
-            launch_task_id = task_group.get_child_by_label("launch").task_id
+            launch_task_id = get_launch_task_id(task_group)
             ti_key = _get_launch_task_key(ti_key, task_id=launch_task_id)
         # Should we catch the exception here if there is no return value?
         metadata = get_xcom_result(ti_key, "return_value", ti)
@@ -335,6 +352,23 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
             f"tasks_to_repair={tasks_str}"
         )
 
+    @classmethod
+    def get_task_group_children(cls, task_group):
+        """
+        Given a TaskGroup, return children which are Tasks, inspecting recursively any TaskGroups within.
+
+        :param task_group: An Airflow TaskGroup
+        :return: Dictionary that contains Task IDs as keys and Tasks as values.
+        """
+        children = {}
+        for child_id, child in task_group.children.items():
+            if isinstance(child, TaskGroup):
+                child_children = cls.get_task_group_children(child)
+                children = {**children, **child_children}
+            else:
+                children[child_id] = child
+        return children
+
     def get_tasks_to_run(
         self, ti_key: TaskInstanceKey, operator: BaseOperator, log: logging.Logger
     ) -> str:
@@ -342,11 +376,13 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
         dag = _get_flask_app().dag_bag.get_dag(ti_key.dag_id)
         dr = _get_dagrun(dag, ti_key.run_id)
         log.debug("Getting failed and skipped tasks for dag run %s", dr.run_id)
+        task_group_sub_tasks = self.get_task_group_children(task_group).items()
         failed_and_skipped_tasks = self._get_failed_and_skipped_tasks(dr)
         log.debug("Failed and skipped tasks: %s", failed_and_skipped_tasks)
+
         tasks_to_run = {
             ti: t
-            for ti, t in task_group.children.items()
+            for ti, t in task_group_sub_tasks
             if ti in failed_and_skipped_tasks
         }
         log.debug(
@@ -357,6 +393,7 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
         tasks_str = ",".join(
             get_databricks_task_ids(task_group.group_id, tasks_to_run, log)
         )
+
         return tasks_str
 
     def _get_failed_and_skipped_tasks(self, dr: DagRun) -> list[str]:
@@ -403,7 +440,7 @@ class DatabricksJobRepairSingleFailedLink(BaseOperatorLink, LoggingMixin):
         task = dag.get_task(ti_key.task_id)
         # Should we catch the exception here if there is no return value?
         if ".launch" not in ti_key.task_id:
-            launch_task_id = task_group.get_child_by_label("launch").task_id
+            launch_task_id = get_launch_task_id(task_group)
             ti_key = _get_launch_task_key(ti_key, task_id=launch_task_id)
         metadata = get_xcom_result(ti_key, "return_value", ti)
 
@@ -438,6 +475,7 @@ class RepairDatabricksTasks(AirflowBaseView, LoggingMixin):
             # If there are no tasks to repair, we return.
             flash("No tasks to repair. Not sending repair request.")
             return redirect(return_url)
+        self.log.info("Tasks to repair: %s", tasks_to_repair)
         self.log.info("Repairing databricks job %s", databricks_run_id)
         res = _repair_task(
             databricks_conn_id=databricks_conn_id,
