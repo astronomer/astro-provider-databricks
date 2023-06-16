@@ -140,14 +140,13 @@ def _repair_task(
         )
 
     api_client = _get_api_client()
-
     log.debug("Getting latest repair ID")
     jobs_service = JobsService(api_client)
     current_job = jobs_service.get_run(run_id=databricks_run_id, include_history=True)
     repair_history = current_job.get("repair_history")
     repair_history_id = None
     if (
-            repair_history and len(repair_history) > 1
+        repair_history and len(repair_history) > 1
     ):  # We use >1 because the first entry is the original run.
         # We use the last item in the array to get the latest repair ID
         repair_history_id = repair_history[-1]["id"]
