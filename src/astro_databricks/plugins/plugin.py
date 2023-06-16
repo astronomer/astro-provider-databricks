@@ -140,14 +140,11 @@ def _repair_task(
         )
 
     api_client = _get_api_client()
-    print("**************************************************!")
-    log.warning("Getting latest repair ID")
+
+    log.debug("Getting latest repair ID")
     jobs_service = JobsService(api_client)
-    print(1)
     current_job = jobs_service.get_run(run_id=databricks_run_id, include_history=True)
-    print(2)
     repair_history = current_job.get("repair_history")
-    print(3)
     log.warning("Repair history %s", repair_history)
     repair_history_id = None
     if (
@@ -155,8 +152,8 @@ def _repair_task(
     ):  # We use >1 because the first entry is the original run.
         # We use the last item in the array to get the latest repair ID
         repair_history_id = repair_history[-1]["id"]
-        log.warning("Latest repair ID is %s", repair_history_id)
-    log.warning(
+        log.debug("Latest repair ID is %s", repair_history_id)
+    log.debug(
         "Sending repair query for tasks %s on run %s",
         tasks_to_repair,
         databricks_run_id,
@@ -370,17 +367,14 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
         log.debug("Getting failed and skipped tasks for dag run %s", dr.run_id)
         task_group_sub_tasks = self.get_task_group_children(task_group).items()
         failed_and_skipped_tasks = self._get_failed_and_skipped_tasks(dr)
-        log.warning("Failed and skipped tasks: %s", failed_and_skipped_tasks)
+        log.debug("Failed and skipped tasks: %s", failed_and_skipped_tasks)
 
-        log.warning("Children: %s", task_group_sub_tasks)
-
-        # the problem is here:
         tasks_to_run = {
             ti: t
             for ti, t in task_group_sub_tasks
             if ti in failed_and_skipped_tasks
         }
-        log.warning(
+        log.debug(
             "Tasks to repair in databricks job %s : %s",
             task_group.group_id,
             tasks_to_run,
@@ -388,7 +382,6 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
         tasks_str = ",".join(
             get_databricks_task_ids(task_group.group_id, tasks_to_run, log)
         )
-        log.warning("Tasks: %s", tasks_str)
 
         return tasks_str
 
@@ -471,7 +464,7 @@ class RepairDatabricksTasks(AirflowBaseView, LoggingMixin):
             # If there are no tasks to repair, we return.
             flash("No tasks to repair. Not sending repair request.")
             return redirect(return_url)
-        self.log.warning("Tasks to repair: %s", tasks_to_repair)
+        self.log.info("Tasks to repair: %s", tasks_to_repair)
         self.log.info("Repairing databricks job %s", databricks_run_id)
         res = _repair_task(
             databricks_conn_id=databricks_conn_id,
