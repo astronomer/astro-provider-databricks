@@ -145,10 +145,9 @@ def _repair_task(
     jobs_service = JobsService(api_client)
     current_job = jobs_service.get_run(run_id=databricks_run_id, include_history=True)
     repair_history = current_job.get("repair_history")
-    log.warning("Repair history %s", repair_history)
     repair_history_id = None
     if (
-        repair_history and len(repair_history) > 1
+            repair_history and len(repair_history) > 1
     ):  # We use >1 because the first entry is the original run.
         # We use the last item in the array to get the latest repair ID
         repair_history_id = repair_history[-1]["id"]
@@ -192,8 +191,15 @@ def get_task_group_legacy(operator: BaseOperator) -> TaskGroup:
 
     return find_my_group(operator.dag.task_group, operator.task_id)
 
-def get_launch_task_id(task_group):
-    launch_task_id = None
+
+def get_launch_task_id(task_group: TaskGroup) -> str:
+    """
+    Retrieve the launch task ID from the current task group or a parent task group,
+    recursively.
+
+    :param task_group: Task Group to be inspected
+    :return: launch Task ID
+    """
     try:
         launch_task_id = task_group.get_child_by_label("launch").task_id
         print("launch task id %s", launch_task_id)
@@ -349,6 +355,12 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
 
     @classmethod
     def get_task_group_children(cls, task_group):
+        """
+        Given a TaskGroup, return children which are Tasks, inspecting recursively any TaskGroups within.
+
+        :param task_group: An Airflow TaskGroup
+        :return: Dictionary that contains Task IDs as keys and Tasks as values.
+        """
         children = {}
         for child_id, child in task_group.children.items():
             if isinstance(child, TaskGroup):
