@@ -140,18 +140,23 @@ def _repair_task(
         )
 
     api_client = _get_api_client()
-    log.debug("Getting latest repair ID")
+    print("**************************************************!")
+    log.warning("Getting latest repair ID")
     jobs_service = JobsService(api_client)
+    print(1)
     current_job = jobs_service.get_run(run_id=databricks_run_id, include_history=True)
+    print(2)
     repair_history = current_job.get("repair_history")
+    print(3)
+    log.warning("Repair history %s", repair_history)
     repair_history_id = None
     if (
         repair_history and len(repair_history) > 1
     ):  # We use >1 because the first entry is the original run.
         # We use the last item in the array to get the latest repair ID
         repair_history_id = repair_history[-1]["id"]
-        log.debug("Latest repair ID is %s", repair_history_id)
-    log.debug(
+        log.warning("Latest repair ID is %s", repair_history_id)
+    log.warning(
         "Sending repair query for tasks %s on run %s",
         tasks_to_repair,
         databricks_run_id,
@@ -189,6 +194,16 @@ def get_task_group_legacy(operator: BaseOperator) -> TaskGroup:
                 return val
 
     return find_my_group(operator.dag.task_group, operator.task_id)
+
+def get_launch_task_id(task_group):
+    launch_task_id = None
+    try:
+        launch_task_id = task_group.get_child_by_label("launch").task_id
+        print("launch task id %s", launch_task_id)
+    except KeyError:
+        launch_task_id = get_launch_task_id(task_group.parent_group)
+
+    return launch_task_id
 
 
 def _get_launch_task_key(
@@ -292,7 +307,7 @@ class DatabricksJobRunLink(BaseOperatorLink, LoggingMixin):
             self.log.debug(
                 "Finding the launch task for job run metadata %s", ti_key.task_id
             )
-            launch_task_id = task_group.get_child_by_label("launch").task_id
+            launch_task_id = get_launch_task_id(task_group)
             ti_key = _get_launch_task_key(ti_key, task_id=launch_task_id)
         # Should we catch the exception here if there is no return value?
         metadata = get_xcom_result(ti_key, "return_value", ti)
@@ -335,6 +350,17 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
             f"tasks_to_repair={tasks_str}"
         )
 
+    @classmethod
+    def get_task_group_children(cls, task_group):
+        children = {}
+        for child_id, child in task_group.children.items():
+            if isinstance(child, TaskGroup):
+                child_children = cls.get_task_group_children(child)
+                children = {**children, **child_children}
+            else:
+                children[child_id] = child
+        return children
+
     def get_tasks_to_run(
         self, ti_key: TaskInstanceKey, operator: BaseOperator, log: logging.Logger
     ) -> str:
@@ -342,14 +368,19 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
         dag = _get_flask_app().dag_bag.get_dag(ti_key.dag_id)
         dr = _get_dagrun(dag, ti_key.run_id)
         log.debug("Getting failed and skipped tasks for dag run %s", dr.run_id)
+        task_group_sub_tasks = self.get_task_group_children(task_group).items()
         failed_and_skipped_tasks = self._get_failed_and_skipped_tasks(dr)
-        log.debug("Failed and skipped tasks: %s", failed_and_skipped_tasks)
+        log.warning("Failed and skipped tasks: %s", failed_and_skipped_tasks)
+
+        log.warning("Children: %s", task_group_sub_tasks)
+
+        # the problem is here:
         tasks_to_run = {
             ti: t
-            for ti, t in task_group.children.items()
+            for ti, t in task_group_sub_tasks
             if ti in failed_and_skipped_tasks
         }
-        log.debug(
+        log.warning(
             "Tasks to repair in databricks job %s : %s",
             task_group.group_id,
             tasks_to_run,
@@ -357,6 +388,8 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
         tasks_str = ",".join(
             get_databricks_task_ids(task_group.group_id, tasks_to_run, log)
         )
+        log.warning("Tasks: %s", tasks_str)
+
         return tasks_str
 
     def _get_failed_and_skipped_tasks(self, dr: DagRun) -> list[str]:
@@ -403,7 +436,7 @@ class DatabricksJobRepairSingleFailedLink(BaseOperatorLink, LoggingMixin):
         task = dag.get_task(ti_key.task_id)
         # Should we catch the exception here if there is no return value?
         if ".launch" not in ti_key.task_id:
-            launch_task_id = task_group.get_child_by_label("launch").task_id
+            launch_task_id = get_launch_task_id(task_group)
             ti_key = _get_launch_task_key(ti_key, task_id=launch_task_id)
         metadata = get_xcom_result(ti_key, "return_value", ti)
 
@@ -438,6 +471,7 @@ class RepairDatabricksTasks(AirflowBaseView, LoggingMixin):
             # If there are no tasks to repair, we return.
             flash("No tasks to repair. Not sending repair request.")
             return redirect(return_url)
+        self.log.warning("Tasks to repair: %s", tasks_to_repair)
         self.log.info("Repairing databricks job %s", databricks_run_id)
         res = _repair_task(
             databricks_conn_id=databricks_conn_id,
