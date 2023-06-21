@@ -156,6 +156,121 @@ def _repair_task(
         tasks_to_repair,
         databricks_run_id,
     )
+
+
+    # manually replace original /Shared/Notebook_2 by /Shared/Notebook_3
+    from databricks_cli.jobs.api import JobsApi
+    job_name = "example_databricks_workflow.test_workflow_tati_1234"
+    jobs_api = JobsApi(api_client)
+    jobs = jobs_api.list_jobs().get("jobs", [])
+    for job in jobs:
+        if job.get("settings", {}).get("name") == job_name:
+            break
+    job_id = job["job_id"]
+
+    new_job_spec = {
+        "name": "example_databricks_workflow.test_workflow_tati_1234",
+        "email_notifications": {
+            "no_alert_for_skipped_runs": False,
+            "on_start": [
+                "tatiana.alchueyr@astronomer.io"
+            ]
+        },
+        "timeout_seconds": 0,
+        "tasks": [
+            {
+                "task_key": "example_databricks_workflow__test_workflow_tati_1234__notebook_1",
+                "depends_on": [],
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 600,
+                "email_notifications": {},
+                "notebook_task": {
+                    "notebook_path": "/Shared/Notebook_1",
+                    "source": "WORKSPACE",
+                    "base_parameters": {
+                        "ts": "2023-06-21T10:35:16+01:00"
+                    }
+                },
+                "libraries": [
+                    {
+                        "pypi": {
+                            "package": "Faker"
+                        }
+                    },
+                    {
+                        "pypi": {
+                            "package": "simplejson==3.18.0",
+                            "repo": "https://pypi.org/simple"
+                        }
+                    }
+                ]
+            },
+            {
+                "task_key": "example_databricks_workflow__test_workflow_tati_1234__notebook_2",
+                "depends_on": [
+                    {
+                        "task_key": "example_databricks_workflow__test_workflow_tati_1234__notebook_1"
+                    }
+                ],
+                "job_cluster_key": "Shared_job_cluster",
+                "timeout_seconds": 21600,
+                "email_notifications": {},
+                "notebook_task": {
+                    "notebook_path": "/Shared/Notebook_3",
+                    "source": "WORKSPACE",
+                    "base_parameters": {
+                        "foo": "bar",
+                        "ds": "2023-06-21",
+                        "ts": "2023-06-21T10:35:16+01:00"
+                    }
+                },
+                "libraries": [
+                    {
+                        "pypi": {
+                            "package": "simplejson==3.18.0",
+                            "repo": "https://pypi.org/simple"
+                        }
+                    }
+                ]
+            }
+        ],
+        "format": "MULTI_TASK",
+        "job_clusters": [
+            {
+                "job_cluster_key": "Shared_job_cluster",
+                "new_cluster": {
+                    "cluster_name": "",
+                    "spark_version": "11.3.x-scala2.12",
+                    "aws_attributes": {
+                        "first_on_demand": 1,
+                        "availability": "SPOT_WITH_FALLBACK",
+                        "zone_id": "us-east-2b",
+                        "spot_bid_price_percent": 100,
+                        "ebs_volume_count": 0
+                    },
+                    "node_type_id": "i3.xlarge",
+                    "spark_env_vars": {
+                        "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+                    },
+                    "enable_elastic_disk": False,
+                    "data_security_mode": "LEGACY_SINGLE_USER_STANDARD",
+                    "runtime_engine": "STANDARD",
+                    "num_workers": 8
+                }
+            }
+        ],
+        "max_concurrent_runs": 1,
+        "webhook_notifications": {
+            "on_start": [
+                {
+                    "id": "b0aea8ab-ea8c-4a45-a2e9-9a26753fd702"
+                }
+            ]
+        }
+    }
+    jobs_api.reset_job(
+        json={"job_id": job_id, "new_settings": new_job_spec}
+    )
     return jobs_service.repair(
         run_id=databricks_run_id,
         version="2.1",
