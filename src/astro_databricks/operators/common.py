@@ -244,7 +244,7 @@ class DatabricksTaskOperator(BaseOperator):
             host=databricks_conn.host,
         )
 
-    def launch_notebook_job(self):
+    def launch_task_job(self):
         """Launch the notebook as a one-time job to Databricks."""
         api_client = self._get_api_client()
         base_task_json = self._get_task_base_json()
@@ -291,7 +291,7 @@ class DatabricksTaskOperator(BaseOperator):
             self.databricks_run_id = databricks_metadata.databricks_run_id
             self.databricks_conn_id = databricks_metadata.databricks_conn_id
         else:
-            self.launch_notebook_job()
+            self.launch_task_job()
 
         self.monitor_databricks_job()
 
