@@ -32,9 +32,7 @@ def databricks_task_operator():
     )
 
 
-@mock.patch(
-    "astro_databricks.operators.common.DatabricksTaskOperator.launch_task_job"
-)
+@mock.patch("astro_databricks.operators.common.DatabricksTaskOperator.launch_task_job")
 @mock.patch(
     "astro_databricks.operators.common.DatabricksTaskOperator.monitor_databricks_job"
 )
@@ -58,22 +56,20 @@ def test_databricks_task_operator_without_taskgroup(mock_monitor, mock_launch, d
         assert task.databricks_conn_id == "foo"
         assert task.job_cluster_key == "foo"
         assert task.task_config == {
-                "notebook_task": {
-                    "notebook_path": "foo",
-                    "source": "WORKSPACE",
-                    "base_parameters": {
-                        "foo": "bar",
-                    },
+            "notebook_task": {
+                "notebook_path": "foo",
+                "source": "WORKSPACE",
+                "base_parameters": {
+                    "foo": "bar",
                 },
-            }
+            },
+        }
     dag.test()
     mock_launch.assert_called_once()
     mock_monitor.assert_called_once()
 
 
-@mock.patch(
-    "astro_databricks.operators.common.DatabricksTaskOperator.launch_task_job"
-)
+@mock.patch("astro_databricks.operators.common.DatabricksTaskOperator.launch_task_job")
 @mock.patch(
     "astro_databricks.operators.common.DatabricksTaskOperator.monitor_databricks_job"
 )
@@ -132,9 +128,7 @@ def test_databricks_task_operator_with_taskgroup(
 @mock.patch(
     "astro_databricks.operators.common.DatabricksTaskOperator._get_databricks_task_id"
 )
-@mock.patch(
-    "astro_databricks.operators.common.DatabricksTaskOperator._get_api_client"
-)
+@mock.patch("astro_databricks.operators.common.DatabricksTaskOperator._get_api_client")
 @mock.patch("astro_databricks.operators.common.RunsApi")
 def test_databricks_task_operator_without_taskgroup_new_cluster(
     mock_runs_api, mock_get_databricks_task_id, mock_monitor, dag
@@ -183,9 +177,7 @@ def test_databricks_task_operator_without_taskgroup_new_cluster(
 @mock.patch(
     "astro_databricks.operators.common.DatabricksTaskOperator._get_databricks_task_id"
 )
-@mock.patch(
-    "astro_databricks.operators.common.DatabricksTaskOperator._get_api_client"
-)
+@mock.patch("astro_databricks.operators.common.DatabricksTaskOperator._get_api_client")
 @mock.patch("astro_databricks.operators.common.RunsApi")
 def test_databricks_task_operator_without_taskgroup_existing_cluster(
     mock_runs_api, mock_get_databricks_task_id, mock_monitor, dag
@@ -231,9 +223,7 @@ def test_databricks_task_operator_without_taskgroup_existing_cluster(
 @mock.patch(
     "astro_databricks.operators.common.DatabricksTaskOperator.monitor_databricks_job"
 )
-@mock.patch(
-    "astro_databricks.operators.common.DatabricksTaskOperator._get_api_client"
-)
+@mock.patch("astro_databricks.operators.common.DatabricksTaskOperator._get_api_client")
 @mock.patch("astro_databricks.operators.common.RunsApi")
 def test_databricks_task_operator_without_taskgroup_existing_cluster_and_new_cluster(
     mock_runs_api, mock_api_client, mock_monitor, dag
@@ -262,9 +252,7 @@ def test_databricks_task_operator_without_taskgroup_existing_cluster_and_new_clu
 @mock.patch(
     "astro_databricks.operators.common.DatabricksTaskOperator.monitor_databricks_job"
 )
-@mock.patch(
-    "astro_databricks.operators.common.DatabricksTaskOperator._get_api_client"
-)
+@mock.patch("astro_databricks.operators.common.DatabricksTaskOperator._get_api_client")
 @mock.patch("astro_databricks.operators.common.RunsApi")
 def test_databricks_task_operator_without_taskgroup_no_cluster(
     mock_runs_api, mock_api_client, mock_monitor, dag
@@ -335,9 +323,7 @@ def test_wait_for_pending_task(mock_sleep, mock_runs_api, databricks_task_operat
 
 @mock.patch("astro_databricks.operators.common.RunsApi")
 @mock.patch("time.sleep")
-def test_wait_for_terminating_task(
-    mock_sleep, mock_runs_api, databricks_task_operator
-):
+def test_wait_for_terminating_task(mock_sleep, mock_runs_api, databricks_task_operator):
     current_task = {"run_id": "123", "state": {"life_cycle_state": "PENDING"}}
     mock_runs_api.get_run.side_effect = [
         {"state": {"life_cycle_state": "TERMINATING"}},
@@ -379,9 +365,7 @@ def test_get_lifestyle_state(databricks_task_operator):
 
 @mock.patch("astro_databricks.operators.common.DatabricksHook")
 @mock.patch("astro_databricks.operators.common.RunsApi")
-@mock.patch(
-    "astro_databricks.operators.common.DatabricksTaskOperator._get_api_client"
-)
+@mock.patch("astro_databricks.operators.common.DatabricksTaskOperator._get_api_client")
 @mock.patch(
     "astro_databricks.operators.common.DatabricksTaskOperator._get_databricks_task_id"
 )
@@ -424,9 +408,7 @@ def test_monitor_databricks_job_success(
 
 @mock.patch("astro_databricks.operators.common.DatabricksHook")
 @mock.patch("astro_databricks.operators.common.RunsApi")
-@mock.patch(
-    "astro_databricks.operators.common.DatabricksTaskOperator._get_api_client"
-)
+@mock.patch("astro_databricks.operators.common.DatabricksTaskOperator._get_api_client")
 @mock.patch(
     "astro_databricks.operators.common.DatabricksTaskOperator._get_databricks_task_id"
 )

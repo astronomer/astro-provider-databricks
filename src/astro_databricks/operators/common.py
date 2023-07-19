@@ -97,9 +97,7 @@ class DatabricksTaskOperator(BaseOperator):
         DatabricksJobRunLink(),
         DatabricksJobRepairSingleFailedLink(),
     )
-    template_fields = (
-        "databricks_metadata",
-    )
+    template_fields = ("databricks_metadata",)
 
     def __init__(
         self,
@@ -150,9 +148,9 @@ class DatabricksTaskOperator(BaseOperator):
         Convert the operator to a Databricks workflow task that can be a task in a workflow
         """
         if airflow.__version__ in ("2.2.4", "2.2.5"):
-            databricks_task_group = self.find_parent_databricks_workflow_task_group()
+            self.find_parent_databricks_workflow_task_group()
         else:
-            databricks_task_group = self.databricks_task_group
+            pass
 
         if context:
             # The following exception currently only happens on Airflow 2.3, with the following error:
