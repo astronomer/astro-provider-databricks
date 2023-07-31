@@ -9,7 +9,6 @@ from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.utils.context import Context
-from airflow.utils.task_group import TaskGroup
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 
@@ -24,11 +23,11 @@ from astro_databricks.plugins.plugin import (
 )
 
 
-class DatabricksNotebookOperator(BaseOperator):
+class DatabricksTaskOperator(BaseOperator):
     """
-    Launches a notebook to databricks using an Airflow operator.
+    Launches a All Types Task to databricks using an Airflow operator.
 
-    The DatabricksNotebookOperator allows users to launch and monitor notebook
+    The DatabricksTaskOperator allows users to launch and monitor task
      deployments on Databricks as Aiflow tasks.
     It can be used as a part of a DatabricksWorkflowTaskGroup to take advantage of job clusters,
     which allows users to run their tasks on cheaper clusters that can be shared between tasks.
@@ -42,55 +41,68 @@ class DatabricksNotebookOperator(BaseOperator):
                 group_id="test_workflow",
                 databricks_conn_id="databricks_conn",
                 job_clusters=job_cluster_spec,
-                notebook_params={},
             )
             with task_group:
-                notebook_1 = DatabricksNotebookOperator(
-                    task_id="notebook_1",
+                task_1 = DatabricksTaskOperator(
+                    task_id="task_1",
                     databricks_conn_id="databricks_conn",
-                    notebook_path="/Users/daniel@astronomer.io/Test workflow",
-                    source="WORKSPACE",
                     job_cluster_key="Shared_job_cluster",
-                )
-                notebook_2 = DatabricksNotebookOperator(
-                    task_id="notebook_2",
-                    databricks_conn_id="databricks_conn",
-                    notebook_path="/Users/daniel@astronomer.io/Test workflow",
-                    source="WORKSPACE",
-                    job_cluster_key="Shared_job_cluster",
-                    notebook_params={
-                        "foo": "bar",
+                    task_config={
+                        "notebook_task": {
+                            "notebook_path": "/Users/daniel@astronomer.io/Test workflow",
+                            "source": "WORKSPACE",
+                            "base_parameters": {
+                                "end_time": "{{ ts }}",
+                                "start_time": "{{ ts }}",
+                            },
+                        },
+                        "libraries": [
+                            {"pypi": {"package": "scikit-learn"}},
+                            {"pypi": {"package": "pandas"}},
+                        ],
                     },
                 )
-                notebook_1 >> notebook_2
+                task_2 = DatabricksTaskOperator(
+                    task_id="task_2",
+                    databricks_conn_id="databricks_conn",
+                    job_cluster_key="Shared_job_cluster",
+                    task_config={
+                        "spark_jar_task": {
+                            "main_class_name": "jar.main.class.here",
+                            "parameters": [
+                                "--key",
+                                "value",
+                            ],
+                            "run_as_repl": "true",
+                        },
+                        "libraries": [
+                            {
+                                "jar": "your.jar.path/file.jar"
+                            }
+                        ],
+                    },
+                )
+                task_1 >> task_2
 
-
-        :param notebook_path: the path to the notebook in Databricks
-        :param source: Optional location type of the notebook. When set to WORKSPACE, the notebook will be retrieved
-            from the local Databricks workspace. When set to GIT, the notebook will be retrieved from a Git repository
-            defined in git_source. If the value is empty, the task will use GIT if git_source is defined
-            and WORKSPACE otherwise. For more information please visit
-            https://docs.databricks.com/dev-tools/api/latest/jobs.html#operation/JobsCreate
+        :param task_id: the task name displayed in Databricks and Airflow.
         :param databricks_conn_id: the connection id to use to connect to Databricks
-        :param notebook_params: the parameters to pass to the notebook
+        :param job_cluster_key: the connection id to use to connect to Databricks
+        :param task_config: Please write appropriate configuration values for various tasks provided by Databricks
+                            such as notebook_task, spark_jar_task, spark_python_task, spark_submit_task, etc.
+                            For more information please visit
+                                https://docs.databricks.com/dev-tools/api/latest/jobs.html#operation/JobsCreate
     """
 
     operator_extra_links = (
         DatabricksJobRunLink(),
         DatabricksJobRepairSingleFailedLink(),
     )
-    template_fields = (
-        "databricks_metadata",
-        "notebook_params",
-    )
+    template_fields = ("databricks_metadata",)
 
     def __init__(
         self,
-        notebook_path: str,
-        source: str,
         databricks_conn_id: str,
-        notebook_params: dict | None = None,
-        notebook_packages: list[dict[str, Any]] = None,
+        task_config: dict | None = None,
         job_cluster_key: str | None = None,
         new_cluster: dict | None = None,
         existing_cluster_id: str | None = None,
@@ -101,15 +113,12 @@ class DatabricksNotebookOperator(BaseOperator):
                 "Both new_cluster and existing_cluster_id are set. Only one can be set."
             )
 
-        self.notebook_path = notebook_path
-        self.source = source
-        self.notebook_params = notebook_params or {}
-        self.notebook_packages = notebook_packages or []
+        self.task_config = task_config or {}
         self.databricks_conn_id = databricks_conn_id
         self.databricks_run_id = ""
         self.databricks_metadata: dict | None = None
-        self.job_cluster_key = job_cluster_key or ""
-        self.new_cluster = new_cluster or {}
+        self.job_cluster_key = job_cluster_key
+        self.new_cluster = new_cluster
         self.existing_cluster_id = existing_cluster_id or ""
         super().__init__(**kwargs)
 
@@ -121,40 +130,7 @@ class DatabricksNotebookOperator(BaseOperator):
 
     def _get_task_base_json(self) -> dict[str, Any]:
         """Get task base json to be used for task group tasks and single task submissions."""
-        return {
-            # Timeout seconds value of 0 for the Databricks Jobs API means the job runs forever.
-            # That is also the default behavior of Databricks jobs to run a job forever without a default timeout value.
-            "timeout_seconds": int(self.execution_timeout.total_seconds())
-            if self.execution_timeout
-            else 0,
-            "email_notifications": {},
-            "notebook_task": {
-                "notebook_path": self.notebook_path,
-                "source": self.source,
-                "base_parameters": self.notebook_params,
-            },
-            "libraries": self.notebook_packages,
-        }
-
-    def merge_notebook_packages(self, databricks_task_group: TaskGroup):
-        """
-        Merge the task group notebook packages into the notebook's packages, without adding any identical duplicates.
-        Modifies self.notebook_packages in place.
-
-        Example value for self.notebook_packages:
-        [
-            {"pypi": {"package": "requests_toolbelt==1.0.0"}}
-        ]
-
-        """
-        for task_group_package in databricks_task_group.notebook_packages:
-            exists = False
-            for existing_package in self.notebook_packages:
-                if task_group_package == existing_package:
-                    exists = True
-                    break
-            if not exists:
-                self.notebook_packages.append(task_group_package)
+        return self.task_config
 
     def find_parent_databricks_workflow_task_group(self):
         """
@@ -177,20 +153,10 @@ class DatabricksNotebookOperator(BaseOperator):
         Convert the operator to a Databricks workflow task that can be a task in a workflow
         """
         if airflow.__version__ in ("2.2.4", "2.2.5"):
-            databricks_task_group = self.find_parent_databricks_workflow_task_group()
+            self.find_parent_databricks_workflow_task_group()
         else:
-            databricks_task_group = self.databricks_task_group
+            pass
 
-        if databricks_task_group and hasattr(
-            databricks_task_group, "notebook_packages"
-        ):
-            self.merge_notebook_packages(databricks_task_group)
-
-        if databricks_task_group and hasattr(databricks_task_group, "notebook_params"):
-            self.notebook_params = {
-                **self.notebook_params,
-                **databricks_task_group.notebook_params,
-            }
         if context:
             # The following exception currently only happens on Airflow 2.3, with the following error:
             # airflow.exceptions.AirflowException: XComArg result from test_workflow.launch at example_databricks_workflow with key="return_value" is not found!
@@ -207,9 +173,12 @@ class DatabricksNotebookOperator(BaseOperator):
                 for t in self.upstream_task_ids
                 if t in relevant_upstreams
             ],
-            "job_cluster_key": self.job_cluster_key,
             **base_task_json,
         }
+
+        if self.job_cluster_key:
+            result["job_cluster_key"] = self.job_cluster_key
+
         return result
 
     def _get_databricks_task_id(self, task_id: str):
@@ -281,7 +250,7 @@ class DatabricksNotebookOperator(BaseOperator):
             host=databricks_conn.host,
         )
 
-    def launch_notebook_job(self):
+    def launch_task_job(self):
         """Launch the notebook as a one-time job to Databricks."""
         api_client = self._get_api_client()
         base_task_json = self._get_task_base_json()
@@ -328,7 +297,7 @@ class DatabricksNotebookOperator(BaseOperator):
             self.databricks_run_id = databricks_metadata.databricks_run_id
             self.databricks_conn_id = databricks_metadata.databricks_conn_id
         else:
-            self.launch_notebook_job()
+            self.launch_task_job()
 
         self.monitor_databricks_job()
 
