@@ -105,7 +105,7 @@ def test_databricks_task_operator_with_taskgroup(
                     },
                 },
             )
-            assert task.task_id == "test_task"
+            assert task.task_id == "test_workflow.test_task"
             assert task.databricks_conn_id == "foo"
             assert task.job_cluster_key == "foo"
             assert task.task_config == {
@@ -131,7 +131,7 @@ def test_databricks_task_operator_with_taskgroup(
 @mock.patch("astro_databricks.operators.common.DatabricksTaskOperator._get_api_client")
 @mock.patch("astro_databricks.operators.common.RunsApi")
 def test_databricks_task_operator_without_taskgroup_new_cluster(
-    mock_runs_api, mock_get_databricks_task_id, mock_monitor, dag
+    mock_runs_api, mock_api_client, mock_get_databricks_task_id, mock_monitor, dag
 ):
     mock_get_databricks_task_id.return_value = "1234"
     mock_runs_api.return_value = mock.MagicMock()
@@ -156,16 +156,13 @@ def test_databricks_task_operator_without_taskgroup_new_cluster(
         {
             "run_name": "1234",
             "new_cluster": {"foo": "bar"},
-            "task_config": {
-                "notebook_task": {
-                    "notebook_path": "foo",
-                    "source": "WORKSPACE",
-                    "base_parameters": {
-                        "foo": "bar",
-                    },
+            "notebook_task": {
+                "notebook_path": "foo",
+                "source": "WORKSPACE",
+                "base_parameters": {
+                    "foo": "bar",
                 },
             },
-            "email_notifications": {},
         }
     )
     mock_monitor.assert_called_once()
@@ -180,7 +177,7 @@ def test_databricks_task_operator_without_taskgroup_new_cluster(
 @mock.patch("astro_databricks.operators.common.DatabricksTaskOperator._get_api_client")
 @mock.patch("astro_databricks.operators.common.RunsApi")
 def test_databricks_task_operator_without_taskgroup_existing_cluster(
-    mock_runs_api, mock_get_databricks_task_id, mock_monitor, dag
+    mock_runs_api, mock_api_client, mock_get_databricks_task_id, mock_monitor, dag
 ):
     mock_get_databricks_task_id.return_value = "1234"
     mock_runs_api.return_value = mock.MagicMock()
@@ -204,17 +201,14 @@ def test_databricks_task_operator_without_taskgroup_existing_cluster(
     mock_runs_api.return_value.submit_run.assert_called_once_with(
         {
             "run_name": "1234",
-            "task_config": {
-                "notebook_task": {
-                    "notebook_path": "foo",
-                    "source": "WORKSPACE",
-                    "base_parameters": {
-                        "foo": "bar",
-                    },
+            "notebook_task": {
+                "notebook_path": "foo",
+                "source": "WORKSPACE",
+                "base_parameters": {
+                    "foo": "bar",
                 },
             },
             "existing_cluster_id": "123",
-            "email_notifications": {},
         }
     )
     mock_monitor.assert_called_once()
@@ -272,8 +266,6 @@ def test_databricks_task_operator_without_taskgroup_no_cluster(
                         },
                     },
                 },
-                existing_cluster_id="123",
-                new_cluster={"foo": "bar"},
             )
         dag.test()
 

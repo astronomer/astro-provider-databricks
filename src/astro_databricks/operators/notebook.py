@@ -96,6 +96,11 @@ class DatabricksNotebookOperator(BaseOperator):
         existing_cluster_id: str | None = None,
         **kwargs,
     ):
+        if new_cluster and existing_cluster_id:
+            raise ValueError(
+                "Both new_cluster and existing_cluster_id are set. Only one can be set."
+            )
+
         self.notebook_path = notebook_path
         self.source = source
         self.notebook_params = notebook_params or {}
@@ -176,7 +181,9 @@ class DatabricksNotebookOperator(BaseOperator):
         else:
             databricks_task_group = self.databricks_task_group
 
-        if databricks_task_group and hasattr(databricks_task_group, "notebook_packages"):
+        if databricks_task_group and hasattr(
+            databricks_task_group, "notebook_packages"
+        ):
             self.merge_notebook_packages(databricks_task_group)
 
         if databricks_task_group and hasattr(databricks_task_group, "notebook_params"):

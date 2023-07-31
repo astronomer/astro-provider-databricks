@@ -108,6 +108,11 @@ class DatabricksTaskOperator(BaseOperator):
         existing_cluster_id: str | None = None,
         **kwargs,
     ):
+        if new_cluster and existing_cluster_id:
+            raise ValueError(
+                "Both new_cluster and existing_cluster_id are set. Only one can be set."
+            )
+
         self.task_config = task_config or {}
         self.databricks_conn_id = databricks_conn_id
         self.databricks_run_id = ""
