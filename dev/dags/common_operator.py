@@ -72,7 +72,7 @@ def common_operator():
             task_config={
                 "sql_task": {
                     "query": {
-                        "query_id": "b2ab4f0e-bf47-474e-91e5-0f36f5f81a1b",
+                        "query_id": "c9cf6468-babe-41a6-abc3-10ac358c71ee",
                     },
                     "warehouse_id": "cf414a2206dfb397",
                 }
