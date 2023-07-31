@@ -112,8 +112,8 @@ class DatabricksTaskOperator(BaseOperator):
         self.databricks_conn_id = databricks_conn_id
         self.databricks_run_id = ""
         self.databricks_metadata: dict | None = None
-        self.job_cluster_key = job_cluster_key or ""
-        self.new_cluster = new_cluster or {}
+        self.job_cluster_key = job_cluster_key
+        self.new_cluster = new_cluster
         self.existing_cluster_id = existing_cluster_id or ""
         super().__init__(**kwargs)
 
@@ -168,9 +168,12 @@ class DatabricksTaskOperator(BaseOperator):
                 for t in self.upstream_task_ids
                 if t in relevant_upstreams
             ],
-            "job_cluster_key": self.job_cluster_key,
             **base_task_json,
         }
+
+        if self.job_cluster_key:
+            result["job_cluster_key"] = self.job_cluster_key
+
         return result
 
     def _get_databricks_task_id(self, task_id: str):
