@@ -42,9 +42,12 @@ def test(session: nox.Session, airflow) -> None:
     # RuntimeError: The package `apache-airflow-providers-databricks:4.2.0` requires Apache Airflow 2.4.0+
     if version.parse(airflow) < version.parse("2.4"):
         session.install("apache-airflow-providers-databricks<4.2")
+    elif version.parse(airflow) < version.parse("2.6"):
+        session.install("apache-airflow-providers-databricks<6.0.0")
 
     if version.parse(airflow) < version.parse("2.7"):
         session.install("pydantic>=1.10.0,<2.0.0")
+        session.install("pendulum<3.0.0")
 
     session.install("-e", ".[tests]")
     session.install(f"apache-airflow=={airflow}")
