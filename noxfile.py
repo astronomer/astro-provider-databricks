@@ -43,6 +43,9 @@ def test(session: nox.Session, airflow) -> None:
     if version.parse(airflow) < version.parse("2.4"):
         session.install("apache-airflow-providers-databricks<4.2")
 
+    if version.parse(airflow) < version.parse("2.7"):
+        session.install("pydantic>=1.10.0,<2.0.0")
+
     session.install("-e", ".[tests]")
     session.install(f"apache-airflow=={airflow}")
 
