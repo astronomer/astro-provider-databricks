@@ -44,9 +44,7 @@ def test(session: nox.Session, airflow) -> None:
         session.install(f"apache-airflow=={airflow}")
         session.run("pip", "uninstall", "apache-airflow-providers-common-io", "-y")
     else:
-        python_version = session.python
-        airflow_version = f"{airflow}.0"
-        session.install(f"apache-airflow[databricks]=={airflow}", "--constraint", f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{python_version}.txt")
+        session.install(f"apache-airflow[databricks]=={airflow}", "--constraint", f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow}.0/constraints-{session.python}.txt")
     session.install("-e", ".[tests]")
 
 
