@@ -48,6 +48,8 @@ def test(session: nox.Session, airflow) -> None:
     
     airflow_version = airflow if airflow == "2.2.4" else f"{airflow}.0"
     session.install(f"apache-airflow[databricks]=={airflow}", "--constraint", f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{python_version}.txt")
+    if version.parse(airflow) < version.parse("2.4"):
+        session.install("apache-airflow-providers-databricks<4.2")
     session.install("-e", ".[tests]")
 
 
