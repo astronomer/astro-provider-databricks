@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.1.6 (24-02-23)
+----------------
+
+Version changes 
+* Bump `pydantic` to `>=2.3.0` to be compatible with Airflow 2.7.0+.
+
 0.1.4 (23-06-16)
 ----------------
 
