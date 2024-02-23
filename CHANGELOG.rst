@@ -4,8 +4,25 @@ Changelog
 0.1.6 (24-02-23)
 ----------------
 
-Version changes 
-* Bump `pydantic` to `>=1.10.0` to be compatible with Airflow 2.7.0+.
+Bug fixes
+
+* Bump `pydantic` to `>=1.10.0` to be compatible with Airflow 2.7.0+ (PR `#61 <https://github.com/astronomer/astro-provider-databricks/pull/61>`_ by @w0ut0)
+
+
+0.1.5 (31-07-23)
+----------------
+
+Feature
+
+* Add operator that supports all task types (PR `#55 <https://github.com/astronomer/astro-provider-databricks/pull/55>`_ by @crong-k)
+
+Bug fixes
+
+* Limit Pydantic < 2.0.0 until Airflow resolves incompatibilities (PR `#52 <https://github.com/astronomer/astro-provider-databricks/pull/42>`_ by @tatiana)
+
+Enhancements
+
+* Update query ID to hello world query (PR `#56 <https://github.com/astronomer/astro-provider-databricks/pull/56>`_ by @jlaneve)
 
 0.1.4 (23-06-16)
 ----------------
