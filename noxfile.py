@@ -37,9 +37,17 @@ def test(session: nox.Session, airflow) -> None:
         "AIRFLOW_HOME": f"~/airflow-{airflow}-python-{session.python}",
         "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.* astro_databricks\\.*",
     }
-
+    python_version = session.python
+    airflow_version = f"{airflow}.0"
+    if airflow == "2.2.4":
+        airflow_version = airflow
+        # There are no constraints for Airflow 2.2.4 and Python 3.10
+        # https://github.com/apache/airflow/tree/constraints-2.4.0
+        if python_version == "3.10":
+            python_version = "3.9"
+    
     airflow_version = airflow if airflow == "2.2.4" else f"{airflow}.0"
-    session.install(f"apache-airflow[databricks]=={airflow}", "--constraint", f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{session.python}.txt")
+    session.install(f"apache-airflow[databricks]=={airflow}", "--constraint", f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{python_version}.txt")
     session.install("-e", ".[tests]")
 
 
