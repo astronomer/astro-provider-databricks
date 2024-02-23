@@ -38,19 +38,13 @@ def test(session: nox.Session, airflow) -> None:
         "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.* astro_databricks\\.*",
     }
 
-    # Workaround to the issue:
-    # RuntimeError: The package `apache-airflow-providers-databricks:4.2.0` requires Apache Airflow 2.4.0+
-    if version.parse(airflow) < version.parse("2.4"):
-        session.install("apache-airflow-providers-databricks<4.2")
-    elif version.parse(airflow) < version.parse("2.6"):
-        session.install("apache-airflow-providers-databricks<6.0.0")
-
     if version.parse(airflow) < version.parse("2.7"):
         session.install("pydantic>=1.10.0,<2.0.0")
         session.install("pendulum<3.0.0")
 
+    session.install(f"apache-airflow[databricks]=={airflow}", "--constraint", f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow}.0/constraints-{session.python}.txt")
     session.install("-e", ".[tests]")
-    session.install(f"apache-airflow=={airflow}")
+
 
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
