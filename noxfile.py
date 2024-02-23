@@ -38,11 +38,8 @@ def test(session: nox.Session, airflow) -> None:
         "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.* astro_databricks\\.*",
     }
 
-    if version.parse(airflow) < version.parse("2.7"):
-        session.install("pydantic>=1.10.0,<2.0.0")
-        session.install("pendulum<3.0.0")
-
-    session.install(f"apache-airflow[databricks]=={airflow}", "--constraint", f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow}.0/constraints-{session.python}.txt")
+    airflow_version = airflow if airflow == "2.2.4" else f"{airflow}.0"
+    session.install(f"apache-airflow[databricks]=={airflow}", "--constraint", f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{session.python}.txt")
     session.install("-e", ".[tests]")
 
 
