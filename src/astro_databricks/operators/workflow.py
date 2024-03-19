@@ -4,6 +4,8 @@ from __future__ import annotations
 from logging import Logger
 from typing import TYPE_CHECKING
 
+from constants import JOBS_API_VERSION
+
 if TYPE_CHECKING:
     pass
 import json
@@ -40,7 +42,7 @@ class DatabricksMetaData:
 
 
 def _get_job_by_name(job_name: str, jobs_api: JobsApi) -> dict | None:
-    jobs = jobs_api.list_jobs().get("jobs", [])
+    jobs = jobs_api.list_jobs(version=JOBS_API_VERSION).get("jobs", [])
     for job in jobs:
         if job.get("settings", {}).get("name") == job_name:
             return job
@@ -175,13 +177,16 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
             )
 
             jobs_api.reset_job(
-                json={"job_id": job_id, "new_settings": current_job_spec}
+                json={"job_id": job_id, "new_settings": current_job_spec},
+                version=JOBS_API_VERSION,
             )
         else:
             self.log.info(
                 "Creating new job with spec %s", json.dumps(current_job_spec, indent=4)
             )
-            job_id = jobs_api.create_job(json=current_job_spec)["job_id"]
+            job_id = jobs_api.create_job(
+                json=current_job_spec, version=JOBS_API_VERSION
+            )["job_id"]
 
         run_id = jobs_api.run_now(
             job_id=job_id,
@@ -189,13 +194,16 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
             notebook_params=self.notebook_params,
             python_params=self.task_group.python_params,
             spark_submit_params=self.task_group.spark_submit_params,
+            version=JOBS_API_VERSION,
         )["run_id"]
         self.databricks_run_id = run_id
 
         runs_api = RunsApi(api_client)
-        url = runs_api.get_run(run_id).get("run_page_url")
+        url = runs_api.get_run(run_id, version=JOBS_API_VERSION).get("run_page_url")
         self.log.info(f"Check the job run in Databricks: {url}")
-        state = runs_api.get_run(run_id)["state"]["life_cycle_state"]
+        state = runs_api.get_run(run_id, version=JOBS_API_VERSION)["state"][
+            "life_cycle_state"
+        ]
         self.log.info(f"Job state: {state}")
 
         if state not in ("PENDING", "BLOCKED", "RUNNING"):
@@ -206,7 +214,9 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         while state in ("PENDING", "BLOCKED"):
             self.log.info(f"Job {state}")
             time.sleep(5)
-            state = runs_api.get_run(run_id)["state"]["life_cycle_state"]
+            state = runs_api.get_run(run_id, version=JOBS_API_VERSION)["state"][
+                "life_cycle_state"
+            ]
 
         return {
             "databricks_conn_id": self.databricks_conn_id,
