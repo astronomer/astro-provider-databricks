@@ -4,8 +4,6 @@ from __future__ import annotations
 from logging import Logger
 from typing import TYPE_CHECKING
 
-from constants import JOBS_API_VERSION
-
 if TYPE_CHECKING:
     pass
 import json
@@ -28,6 +26,7 @@ from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 from mergedeep import merge
 
+from astro_databricks.constants import JOBS_API_VERSION
 from astro_databricks.plugins.plugin import (
     DatabricksJobRepairAllFailedLink,
     DatabricksJobRunLink,
