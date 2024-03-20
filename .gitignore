@@ -153,3 +153,5 @@ webserver_config.py
 
 # VIM
 *.sw[a-z]
+
+dev/logs/
