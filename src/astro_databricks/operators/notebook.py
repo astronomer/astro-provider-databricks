@@ -300,7 +300,7 @@ class DatabricksNotebookOperator(BaseOperator):
         else:
             raise ValueError("Must specify either existing_cluster_id or new_cluster")
         runs_api = RunsApi(api_client)
-        run = runs_api.submit_run(run_json)
+        run = runs_api.submit_run(run_json, version=JOBS_API_VERSION)
         self.databricks_run_id = run["run_id"]
         return run
 

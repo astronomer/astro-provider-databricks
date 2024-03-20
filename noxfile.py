@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 
 import nox
-from packaging import version
 
 nox.options.sessions = ["dev"]
 nox.options.error_on_external_run = False
@@ -30,7 +29,7 @@ def _expand_env_vars(file_path: Path):
 
 
 @nox.session(python=["3.8", "3.9", "3.10"])
-@nox.parametrize("airflow", ["2.2.4", "2.3", "2.4", "2.5"])
+@nox.parametrize("airflow", ["2.3", "2.4", "2.5", "2.6", "2.7", "2.8"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     env = {
@@ -38,15 +37,12 @@ def test(session: nox.Session, airflow) -> None:
         "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.* astro_databricks\\.*",
     }
 
-    if version.parse(airflow) == version.parse("2.2.4"):
-        # constraints file raised a few exceptions for Airflow 2.2.4
-        session.install("apache-airflow-providers-databricks<4.2")
-        session.install(f"apache-airflow=={airflow}")
-        session.run("pip", "uninstall", "apache-airflow-providers-common-io", "-y")
-    else:
-        session.install(f"apache-airflow[databricks]=={airflow}", "--constraint", f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow}.0/constraints-{session.python}.txt")
+    session.install(
+        f"apache-airflow[databricks]=={airflow}",
+        "--constraint",
+        f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow}.0/constraints-{session.python}.txt",
+    )
     session.install("-e", ".[tests]")
-
 
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
