@@ -1,16 +1,17 @@
+---
 name: Build and test astro databricks provider
-on:
+on:  # yamllint disable-line rule:truthy
   push:
-    branches: [ main]
+    branches: [main]
 
   pull_request:
-    branches: [ main,  'release-**' ]
+    branches: [main, 'release-**']
   # Run on PRs from forks
   pull_request_target:
-    branches: [ 'main' ]
+    branches: ['main']
     types: ['labeled']
   release:
-    types: [ 'created' ]
+    types: ['created']
 
 # This allows a subsequently queued workflow run to interrupt and cancel previous runs
 concurrency:
@@ -31,7 +32,7 @@ jobs:
         with:
           config-file: '.github/workflows/mlc_config.json'
 
-# TODO: Fix Type-check failures ticket: https://github.com/astronomer/astro-provider-databricks/issues/5
+#  TODO: Fix Type-check failures ticket: https://github.com/astronomer/astro-provider-databricks/issues/5
 #  Type-Check:
 #    if: github.event.action != 'labeled'
 #    runs-on: ubuntu-latest
@@ -72,12 +73,12 @@ jobs:
       - run: pip3 install nox packaging
       - run: nox -s build_docs
 
-  Run-Unit-Tests:
+  Run-Unit-Tests:  # yamllint disable-line
     strategy:
       fail-fast: false
       matrix:
-        python: [ '3.8', '3.9', '3.10' ]
-        airflow: [ 2.5 ]
+        python: ['3.8', '3.9', '3.10']
+        airflow: [2.8]
     if: >-
       github.event_name == 'push' ||
       (
@@ -123,8 +124,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ '3.8', '3.9', '3.10' ]
-        airflow: [ '2.2.4', '2.3', '2.4', '2.5' ]
+        python: ['3.8', '3.9', '3.10']
+        airflow: ['2.3', '2.4', '2.5', '2.6', '2.7', '2.8']
 
     if: >-
       github.event_name == 'push' ||
@@ -215,14 +216,14 @@ jobs:
       - Code-Coverage
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-        architecture: 'x64'
-    - run: pip3 install hatch
-    - run: hatch build
-    - run: hatch publish
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - run: pip3 install hatch
+      - run: hatch build
+      - run: hatch publish
     env:
       HATCH_INDEX_USER: __token__
       HATCH_INDEX_AUTH: ${{ secrets.PYPI_TOKEN }}
