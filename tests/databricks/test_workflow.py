@@ -6,6 +6,7 @@ from unittest import mock
 import pytest
 from airflow.exceptions import AirflowException
 from airflow.utils.task_group import TaskGroup
+from astro_databricks.constants import JOBS_API_VERSION
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
 
@@ -142,7 +143,7 @@ def test_create_workflow_from_notebooks_with_create(
     task_group.children["test_workflow.launch"].execute(context={})
     mock_jobs_api.return_value.create_job.assert_called_once_with(
         json=expected_workflow_json,
-        version="2.1",
+        version=JOBS_API_VERSION,
     )
     mock_jobs_api.return_value.run_now.assert_called_once_with(
         job_id=1,
@@ -150,7 +151,7 @@ def test_create_workflow_from_notebooks_with_create(
         notebook_params={"notebook_path": "/foo/bar"},
         python_params=[],
         spark_submit_params=[],
-        version="2.1",
+        version=JOBS_API_VERSION,
     )
 
 
