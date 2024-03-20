@@ -26,11 +26,11 @@ from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 from mergedeep import merge
 
-from astro_databricks.constants import JOBS_API_VERSION
 from astro_databricks.plugins.plugin import (
     DatabricksJobRepairAllFailedLink,
     DatabricksJobRunLink,
 )
+from astro_databricks.settings import DATABRICKS_JOBS_API_VERSION
 
 
 @define
@@ -41,7 +41,7 @@ class DatabricksMetaData:
 
 
 def _get_job_by_name(job_name: str, jobs_api: JobsApi) -> dict | None:
-    jobs = jobs_api.list_jobs(version=JOBS_API_VERSION).get("jobs", [])
+    jobs = jobs_api.list_jobs(version=DATABRICKS_JOBS_API_VERSION).get("jobs", [])
     for job in jobs:
         if job.get("settings", {}).get("name") == job_name:
             return job
@@ -177,14 +177,14 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
 
             jobs_api.reset_job(
                 json={"job_id": job_id, "new_settings": current_job_spec},
-                version=JOBS_API_VERSION,
+                version=DATABRICKS_JOBS_API_VERSION,
             )
         else:
             self.log.info(
                 "Creating new job with spec %s", json.dumps(current_job_spec, indent=4)
             )
             job_id = jobs_api.create_job(
-                json=current_job_spec, version=JOBS_API_VERSION
+                json=current_job_spec, version=DATABRICKS_JOBS_API_VERSION
             )["job_id"]
 
         run_id = jobs_api.run_now(
@@ -193,14 +193,16 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
             notebook_params=self.notebook_params,
             python_params=self.task_group.python_params,
             spark_submit_params=self.task_group.spark_submit_params,
-            version=JOBS_API_VERSION,
+            version=DATABRICKS_JOBS_API_VERSION,
         )["run_id"]
         self.databricks_run_id = run_id
 
         runs_api = RunsApi(api_client)
-        url = runs_api.get_run(run_id, version=JOBS_API_VERSION).get("run_page_url")
+        url = runs_api.get_run(run_id, version=DATABRICKS_JOBS_API_VERSION).get(
+            "run_page_url"
+        )
         self.log.info(f"Check the job run in Databricks: {url}")
-        state = runs_api.get_run(run_id, version=JOBS_API_VERSION)["state"][
+        state = runs_api.get_run(run_id, version=DATABRICKS_JOBS_API_VERSION)["state"][
             "life_cycle_state"
         ]
         self.log.info(f"Job state: {state}")
@@ -213,9 +215,9 @@ class _CreateDatabricksWorkflowOperator(BaseOperator):
         while state in ("PENDING", "BLOCKED"):
             self.log.info(f"Job {state}")
             time.sleep(5)
-            state = runs_api.get_run(run_id, version=JOBS_API_VERSION)["state"][
-                "life_cycle_state"
-            ]
+            state = runs_api.get_run(run_id, version=DATABRICKS_JOBS_API_VERSION)[
+                "state"
+            ]["life_cycle_state"]
 
         return {
             "databricks_conn_id": self.databricks_conn_id,

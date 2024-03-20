@@ -3,11 +3,11 @@ from unittest.mock import MagicMock
 
 import pytest
 from airflow.exceptions import AirflowException
-from astro_databricks.constants import JOBS_API_VERSION
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import (
     DatabricksWorkflowTaskGroup,
 )
+from astro_databricks.settings import DATABRICKS_JOBS_API_VERSION
 
 
 @pytest.fixture
@@ -153,7 +153,7 @@ def test_databricks_notebook_operator_without_taskgroup_new_cluster(
             "timeout_seconds": 0,
             "email_notifications": {},
         },
-        version=JOBS_API_VERSION,
+        version=DATABRICKS_JOBS_API_VERSION,
     )
     mock_monitor.assert_called_once()
 
@@ -200,7 +200,7 @@ def test_databricks_notebook_operator_without_taskgroup_existing_cluster(
             "timeout_seconds": 0,
             "email_notifications": {},
         },
-        version=JOBS_API_VERSION,
+        version=DATABRICKS_JOBS_API_VERSION,
     )
     mock_monitor.assert_called_once()
 
@@ -297,7 +297,7 @@ def test_wait_for_pending_task(mock_sleep, mock_runs_api, databricks_notebook_op
         {"state": {"life_cycle_state": "RUNNING"}},
     ]
     databricks_notebook_operator._wait_for_pending_task(current_task, mock_runs_api)
-    mock_runs_api.get_run.assert_called_with("123", version=JOBS_API_VERSION)
+    mock_runs_api.get_run.assert_called_with("123", version=DATABRICKS_JOBS_API_VERSION)
     assert mock_runs_api.get_run.call_count == 2
     mock_runs_api.reset_mock()
 
@@ -314,7 +314,7 @@ def test_wait_for_terminating_task(
         {"state": {"life_cycle_state": "TERMINATED"}},
     ]
     databricks_notebook_operator._wait_for_terminating_task(current_task, mock_runs_api)
-    mock_runs_api.get_run.assert_called_with("123", version=JOBS_API_VERSION)
+    mock_runs_api.get_run.assert_called_with("123", version=DATABRICKS_JOBS_API_VERSION)
     assert mock_runs_api.get_run.call_count == 3
     mock_runs_api.reset_mock()
 
@@ -329,7 +329,7 @@ def test_wait_for_running_task(mock_sleep, mock_runs_api, databricks_notebook_op
         {"state": {"life_cycle_state": "TERMINATED"}},
     ]
     databricks_notebook_operator._wait_for_running_task(current_task, mock_runs_api)
-    mock_runs_api.get_run.assert_called_with("123", version=JOBS_API_VERSION)
+    mock_runs_api.get_run.assert_called_with("123", version=DATABRICKS_JOBS_API_VERSION)
     assert mock_runs_api.get_run.call_count == 3
     mock_runs_api.reset_mock()
 
@@ -383,7 +383,8 @@ def test_monitor_databricks_job_success(
     databricks_notebook_operator.databricks_run_id = "1"
     databricks_notebook_operator.monitor_databricks_job()
     mock_runs_api.return_value.get_run.assert_called_with(
-        databricks_notebook_operator.databricks_run_id, version=JOBS_API_VERSION
+        databricks_notebook_operator.databricks_run_id,
+        version=DATABRICKS_JOBS_API_VERSION,
     )
     assert (
         "Check the job run in Databricks: https://databricks-instance-xyz.cloud.databricks.com/#job/1234/run/1"
