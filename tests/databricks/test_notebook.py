@@ -151,7 +151,8 @@ def test_databricks_notebook_operator_without_taskgroup_new_cluster(
             "libraries": [{"nb_index": {"package": "nb_package"}}],
             "timeout_seconds": 0,
             "email_notifications": {},
-        }
+        },
+        version="2.1",
     )
     mock_monitor.assert_called_once()
 
@@ -197,7 +198,8 @@ def test_databricks_notebook_operator_without_taskgroup_existing_cluster(
             "libraries": [{"nb_index": {"package": "nb_package"}}],
             "timeout_seconds": 0,
             "email_notifications": {},
-        }
+        },
+        version="2.1",
     )
     mock_monitor.assert_called_once()
 

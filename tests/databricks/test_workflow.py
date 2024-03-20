@@ -142,6 +142,7 @@ def test_create_workflow_from_notebooks_with_create(
     task_group.children["test_workflow.launch"].execute(context={})
     mock_jobs_api.return_value.create_job.assert_called_once_with(
         json=expected_workflow_json,
+        version="2.1",
     )
     mock_jobs_api.return_value.run_now.assert_called_once_with(
         job_id=1,
@@ -149,6 +150,7 @@ def test_create_workflow_from_notebooks_with_create(
         notebook_params={"notebook_path": "/foo/bar"},
         python_params=[],
         spark_submit_params=[],
+        version="2.1",
     )
 
 
@@ -297,79 +299,6 @@ def test_create_workflow_with_arbitrary_extra_job_params(
     "astro_databricks.operators.workflow.RunsApi.get_run",
     return_value={"state": {"life_cycle_state": "RUNNING"}},
 )
-def test_create_workflow_with_arbitrary_extra_job_params(
-    mock_run_api, mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag
-):
-    mock_get_jobs.return_value = {"job_id": 862519602273592}
-
-    extra_job_params = {
-        "timeout_seconds": 10,  # default: 0
-        "webhook_notifications": {
-            "on_failure": [{"id": "b0aea8ab-ea8c-4a45-a2e9-9a26753fd702"}],
-        },
-        "email_notifications": {
-            "no_alert_for_skipped_runs": True,  # default: False
-            "on_start": ["user.name@databricks.com"],
-        },
-        "git_source": {  # no default value
-            "git_url": "https://github.com/astronomer/astro-provider-databricks",
-            "git_provider": "gitHub",
-            "git_branch": "main",
-        },
-    }
-    with dag:
-        task_group = DatabricksWorkflowTaskGroup(
-            group_id="test_workflow",
-            databricks_conn_id="foo",
-            job_clusters=[{"job_cluster_key": "foo"}],
-            notebook_params={"notebook_path": "/foo/bar"},
-            extra_job_params=extra_job_params,
-        )
-        with task_group:
-            notebook_with_extra = DatabricksNotebookOperator(
-                task_id="notebook_with_extra",
-                databricks_conn_id="foo",
-                notebook_path="/foo/bar",
-                source="WORKSPACE",
-                job_cluster_key="foo",
-            )
-            notebook_with_extra
-
-    assert len(task_group.children) == 2
-
-    task_group.children["test_workflow.launch"].create_workflow_json()
-    task_group.children["test_workflow.launch"].execute(context={})
-
-    mock_jobs_api.return_value.reset_job.assert_called_once()
-    kwargs = mock_jobs_api.return_value.reset_job.call_args_list[0].kwargs["json"]
-
-    assert kwargs["job_id"] == 862519602273592
-    assert (
-        kwargs["new_settings"]["email_notifications"]
-        == extra_job_params["email_notifications"]
-    )
-    assert (
-        kwargs["new_settings"]["timeout_seconds"] == extra_job_params["timeout_seconds"]
-    )
-    assert kwargs["new_settings"]["git_source"] == extra_job_params["git_source"]
-    assert (
-        kwargs["new_settings"]["webhook_notifications"]
-        == extra_job_params["webhook_notifications"]
-    )
-    assert (
-        kwargs["new_settings"]["email_notifications"]
-        == extra_job_params["email_notifications"]
-    )
-
-
-@mock.patch("astro_databricks.operators.workflow.DatabricksHook")
-@mock.patch("astro_databricks.operators.workflow.ApiClient")
-@mock.patch("astro_databricks.operators.workflow.JobsApi")
-@mock.patch("astro_databricks.operators.workflow._get_job_by_name")
-@mock.patch(
-    "astro_databricks.operators.workflow.RunsApi.get_run",
-    return_value={"state": {"life_cycle_state": "RUNNING"}},
-)
 def test_create_workflow_with_nested_task_groups(
     mock_run_api, mock_get_jobs, mock_jobs_api, mock_api, mock_hook, dag
 ):
@@ -399,7 +328,7 @@ def test_create_workflow_with_nested_task_groups(
             extra_job_params=extra_job_params,
             notebook_packages=[
                 {"pypi": {"package": "mlflow==2.4.0"}},
-            ]
+            ],
         )
         with outer_task_group:
             direct_notebook = DatabricksNotebookOperator(
@@ -433,8 +362,14 @@ def test_create_workflow_with_nested_task_groups(
     inner_notebook_json = kwargs["new_settings"]["tasks"][0]
     outer_notebook_json = kwargs["new_settings"]["tasks"][1]
 
-    assert inner_notebook_json["task_key"] == "unit_test_dag__test_workflow__direct_notebook"
+    assert (
+        inner_notebook_json["task_key"]
+        == "unit_test_dag__test_workflow__direct_notebook"
+    )
     assert inner_notebook_json["libraries"] == [{"pypi": {"package": "mlflow==2.4.0"}}]
 
-    assert outer_notebook_json["task_key"] == "unit_test_dag__test_workflow__middle_task_group__inner_task_group__inner_notebook"
+    assert (
+        outer_notebook_json["task_key"]
+        == "unit_test_dag__test_workflow__middle_task_group__inner_task_group__inner_notebook"
+    )
     assert outer_notebook_json["libraries"] == [{"pypi": {"package": "mlflow==2.4.0"}}]
