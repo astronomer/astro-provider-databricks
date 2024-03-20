@@ -1,12 +1,20 @@
 Changelog
 =========
 
-0.1.6 (24-02-23)
+0.2.0 (20-03-24)
+----------------
+
+Feature
+
+* Allow users to specify Databricks API version via an environment variable (PR `#66 <https://github.com/astronomer/astro-provider-databricks/pull/66>`_ by @pankajkoti)
+
+
+0.1.6 (23-02-24)
 ----------------
 
 Bug fixes
 
-* Bump `pydantic` to `>=1.10.0` to be compatible with Airflow 2.7.0+ (PR `#61 <https://github.com/astronomer/astro-provider-databricks/pull/61>`_ by @w0ut0)
+* Bump ``pydantic`` to ``>=1.10.0`` to be compatible with Airflow 2.7.0+ (PR `#61 <https://github.com/astronomer/astro-provider-databricks/pull/61>`_ by @w0ut0)
 
 
 0.1.5 (31-07-23)

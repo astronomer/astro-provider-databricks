@@ -70,3 +70,8 @@ The DatabricksWorkflowTaskGroup is currently in beta and has the following limit
 
 * Since Databricks Workflow Jobs do not support dynamic parameters at the task level, we recommend placing dynamic parameters at the TaskGroup level (e.g. the ``notebook_params`` parameter in the example above). This will ensure that the job is not changed every time the DAG is run.
 * If you plan to run the same DAG multiple times at the same time, make sure to set the ``max_concurrency`` parameter to the expected number of concurrent runs.
+
+Configuration
+=============
+
+By default, the Databricks provider uses the Databricks API version 2.1 for all API calls. This can be overridden by setting an environment variable ``DATABRICKS_JOBS_API_VERSION``.
