@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -111,6 +112,7 @@ def test_databricks_notebook_operator_with_taskgroup(
     mock_monitor.assert_called_once()
 
 
+@pytest.mark.parametrize("api_version", ["3.2", "2.1"])
 @mock.patch(
     "astro_databricks.operators.notebook.DatabricksNotebookOperator.monitor_databricks_job"
 )
@@ -122,24 +124,36 @@ def test_databricks_notebook_operator_with_taskgroup(
 )
 @mock.patch("astro_databricks.operators.notebook.RunsApi")
 def test_databricks_notebook_operator_without_taskgroup_new_cluster(
-    mock_runs_api, mock_api_client, mock_get_databricks_task_id, mock_monitor, dag
+    mock_runs_api,
+    mock_api_client,
+    mock_get_databricks_task_id,
+    mock_monitor,
+    dag,
+    api_version,
 ):
     mock_get_databricks_task_id.return_value = "1234"
     mock_runs_api.return_value = mock.MagicMock()
-    with dag:
-        DatabricksNotebookOperator(
-            task_id="notebook",
-            databricks_conn_id="foo",
-            notebook_path="/foo/bar",
-            source="WORKSPACE",
-            job_cluster_key="foo",
-            notebook_params={
-                "foo": "bar",
-            },
-            notebook_packages=[{"nb_index": {"package": "nb_package"}}],
-            new_cluster={"foo": "bar"},
-        )
-    dag.test()
+    with mock.patch.dict(os.environ, {"DATABRICKS_JOBS_API_VERSION": api_version}):
+        import importlib
+
+        import astro_databricks
+
+        importlib.reload(astro_databricks.settings)
+
+        with dag:
+            DatabricksNotebookOperator(
+                task_id="notebook",
+                databricks_conn_id="foo",
+                notebook_path="/foo/bar",
+                source="WORKSPACE",
+                job_cluster_key="foo",
+                notebook_params={
+                    "foo": "bar",
+                },
+                notebook_packages=[{"nb_index": {"package": "nb_package"}}],
+                new_cluster={"foo": "bar"},
+            )
+        dag.test()
     mock_runs_api.return_value.submit_run.assert_called_once_with(
         {
             "run_name": "1234",
@@ -153,7 +167,7 @@ def test_databricks_notebook_operator_without_taskgroup_new_cluster(
             "timeout_seconds": 0,
             "email_notifications": {},
         },
-        version=DATABRICKS_JOBS_API_VERSION,
+        version=api_version,
     )
     mock_monitor.assert_called_once()
 

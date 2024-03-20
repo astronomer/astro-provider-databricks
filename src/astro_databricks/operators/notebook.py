@@ -13,6 +13,7 @@ from airflow.utils.task_group import TaskGroup
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 
+from astro_databricks import settings
 from astro_databricks.operators.workflow import (
     DatabricksMetaData,
     DatabricksWorkflowTaskGroup,
@@ -21,7 +22,6 @@ from astro_databricks.plugins.plugin import (
     DatabricksJobRepairSingleFailedLink,
     DatabricksJobRunLink,
 )
-from astro_databricks.settings import DATABRICKS_JOBS_API_VERSION
 
 
 class DatabricksNotebookOperator(BaseOperator):
@@ -222,14 +222,14 @@ class DatabricksNotebookOperator(BaseOperator):
         runs_api = RunsApi(api_client)
         current_task = self._get_current_databricks_task(runs_api)
         url = runs_api.get_run(
-            self.databricks_run_id, version=DATABRICKS_JOBS_API_VERSION
+            self.databricks_run_id, version=settings.DATABRICKS_JOBS_API_VERSION
         )["run_page_url"]
         self.log.info(f"Check the job run in Databricks: {url}")
         self._wait_for_pending_task(current_task, runs_api)
         self._wait_for_running_task(current_task, runs_api)
         self._wait_for_terminating_task(current_task, runs_api)
         final_state = runs_api.get_run(
-            current_task["run_id"], version=DATABRICKS_JOBS_API_VERSION
+            current_task["run_id"], version=settings.DATABRICKS_JOBS_API_VERSION
         )["state"]
         self._handle_final_state(final_state)
 
@@ -237,7 +237,7 @@ class DatabricksNotebookOperator(BaseOperator):
         return {
             x["task_key"]: x
             for x in runs_api.get_run(
-                self.databricks_run_id, version=DATABRICKS_JOBS_API_VERSION
+                self.databricks_run_id, version=settings.DATABRICKS_JOBS_API_VERSION
             )["tasks"]
         }[self._get_databricks_task_id(self.task_id)]
 
@@ -255,7 +255,7 @@ class DatabricksNotebookOperator(BaseOperator):
 
     def _get_lifestyle_state(self, current_task, runs_api):
         return runs_api.get_run(
-            current_task["run_id"], version=DATABRICKS_JOBS_API_VERSION
+            current_task["run_id"], version=settings.DATABRICKS_JOBS_API_VERSION
         )["state"]["life_cycle_state"]
 
     def _wait_on_state(self, current_task, runs_api, state):
@@ -300,7 +300,9 @@ class DatabricksNotebookOperator(BaseOperator):
         else:
             raise ValueError("Must specify either existing_cluster_id or new_cluster")
         runs_api = RunsApi(api_client)
-        run = runs_api.submit_run(run_json, version=DATABRICKS_JOBS_API_VERSION)
+        run = runs_api.submit_run(
+            run_json, version=settings.DATABRICKS_JOBS_API_VERSION
+        )
         self.databricks_run_id = run["run_id"]
         return run
 
