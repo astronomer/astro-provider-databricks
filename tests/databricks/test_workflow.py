@@ -4,6 +4,7 @@ import logging
 from unittest import mock
 
 import pytest
+import copy
 from airflow.exceptions import AirflowException
 from airflow.utils.task_group import TaskGroup
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
@@ -50,6 +51,10 @@ expected_workflow_json = {
     "timeout_seconds": 0,
 }
 
+expected_workflow_json_existing_cluster_id = copy.deepcopy(expected_workflow_json)
+# remove job_cluster_key and add existing_cluster_id
+expected_workflow_json_existing_cluster_id['tasks'][1].pop('job_cluster_key')
+expected_workflow_json_existing_cluster_id['tasks'][1]['existing_cluster_id'] = 'foo'
 
 @mock.patch("astro_databricks.operators.workflow.DatabricksHook")
 @mock.patch("astro_databricks.operators.workflow.ApiClient")
@@ -374,3 +379,59 @@ def test_create_workflow_with_nested_task_groups(
         == "unit_test_dag__test_workflow__middle_task_group__inner_task_group__inner_notebook"
     )
     assert outer_notebook_json["libraries"] == [{"pypi": {"package": "mlflow==2.4.0"}}]
+
+@mock.patch("astro_databricks.operators.workflow.DatabricksHook")
+@mock.patch("astro_databricks.operators.workflow.ApiClient")
+@mock.patch("astro_databricks.operators.workflow.JobsApi")
+@mock.patch(
+    "astro_databricks.operators.workflow.RunsApi.get_run",
+    return_value={"state": {"life_cycle_state": "RUNNING"}},
+)
+def test_create_workflow_from_notebooks_with_different_clusters(
+    mock_run_api, mock_jobs_api, mock_api, mock_hook, dag
+):
+    mock_jobs_api.return_value.create_job.return_value = {"job_id": 1}
+    with dag:
+        task_group = DatabricksWorkflowTaskGroup(
+            group_id="test_workflow",
+            databricks_conn_id="foo",
+            job_clusters=[{"job_cluster_key": "foo"}],
+            notebook_params={"notebook_path": "/foo/bar"},
+            notebook_packages=[{"tg_index": {"package": "tg_package"}}],
+        )
+        with task_group:
+            notebook_1 = DatabricksNotebookOperator(
+                task_id="notebook_1",
+                databricks_conn_id="foo",
+                notebook_path="/foo/bar",
+                notebook_packages=[{"nb_index": {"package": "nb_package"}}],
+                source="WORKSPACE",
+                job_cluster_key="foo",
+            )
+            notebook_2 = DatabricksNotebookOperator(
+                task_id="notebook_2",
+                databricks_conn_id="foo",
+                notebook_path="/foo/bar",
+                source="WORKSPACE",
+                job_cluster_key="foo",
+                existing_cluster_id="foo",
+                notebook_params={
+                    "foo": "bar",
+                },
+            )
+            notebook_1 >> notebook_2
+
+    assert len(task_group.children) == 2
+    task_group.children["test_workflow.launch"].execute(context={})
+    mock_jobs_api.return_value.create_job.assert_called_once_with(
+        json=expected_workflow_json_existing_cluster_id,
+        version=DATABRICKS_JOBS_API_VERSION,
+    )
+    mock_jobs_api.return_value.run_now.assert_called_once_with(
+        job_id=1,
+        jar_params=[],
+        notebook_params={"notebook_path": "/foo/bar"},
+        python_params=[],
+        spark_submit_params=[],
+        version=DATABRICKS_JOBS_API_VERSION,
+    )
