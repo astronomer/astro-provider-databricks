@@ -210,6 +210,9 @@ class DatabricksNotebookOperator(BaseOperator):
             **base_task_json,
         }
 
+        if self.existing_cluster_id and self.job_cluster_key:
+            raise ValueError ("Both existing_cluster_id and job_cluster_key are set. Only one cluster can be set per task.")
+        
         if self.existing_cluster_id:
             result['existing_cluster_id'] = self.existing_cluster_id
         elif self.job_cluster_key:
