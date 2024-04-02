@@ -105,5 +105,3 @@ To publish a release to PyPI, use:
 .. code-block:: bash
 
     hatch publish
-
-

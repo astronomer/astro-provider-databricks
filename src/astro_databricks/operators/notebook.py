@@ -211,9 +211,9 @@ class DatabricksNotebookOperator(BaseOperator):
         }
 
         if self.existing_cluster_id:
-            result['existing_cluster_id'] = self.existing_cluster_id
+            result["existing_cluster_id"] = self.existing_cluster_id
         elif self.job_cluster_key:
-            result['job_cluster_key'] = self.job_cluster_key
+            result["job_cluster_key"] = self.job_cluster_key
 
         return result
 

@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from airflow.decorators import dag
-from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.common import DatabricksTaskOperator
+from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
 
 job_clusters = [

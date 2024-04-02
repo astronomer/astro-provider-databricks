@@ -381,9 +381,7 @@ class DatabricksJobRepairAllFailedLink(BaseOperatorLink, LoggingMixin):
         log.debug("Failed and skipped tasks: %s", failed_and_skipped_tasks)
 
         tasks_to_run = {
-            ti: t
-            for ti, t in task_group_sub_tasks
-            if ti in failed_and_skipped_tasks
+            ti: t for ti, t in task_group_sub_tasks if ti in failed_and_skipped_tasks
         }
         log.debug(
             "Tasks to repair in databricks job %s : %s",

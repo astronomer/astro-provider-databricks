@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import copy
 import logging
 from unittest import mock
 
 import pytest
-import copy
 from airflow.exceptions import AirflowException
 from airflow.utils.task_group import TaskGroup
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
@@ -53,8 +53,9 @@ expected_workflow_json = {
 
 expected_workflow_json_existing_cluster_id = copy.deepcopy(expected_workflow_json)
 # remove job_cluster_key and add existing_cluster_id
-expected_workflow_json_existing_cluster_id['tasks'][1].pop('job_cluster_key')
-expected_workflow_json_existing_cluster_id['tasks'][1]['existing_cluster_id'] = 'foo'
+expected_workflow_json_existing_cluster_id["tasks"][1].pop("job_cluster_key")
+expected_workflow_json_existing_cluster_id["tasks"][1]["existing_cluster_id"] = "foo"
+
 
 @mock.patch("astro_databricks.operators.workflow.DatabricksHook")
 @mock.patch("astro_databricks.operators.workflow.ApiClient")
@@ -380,6 +381,7 @@ def test_create_workflow_with_nested_task_groups(
     )
     assert outer_notebook_json["libraries"] == [{"pypi": {"package": "mlflow==2.4.0"}}]
 
+
 @mock.patch("astro_databricks.operators.workflow.DatabricksHook")
 @mock.patch("astro_databricks.operators.workflow.ApiClient")
 @mock.patch("astro_databricks.operators.workflow.JobsApi")
@@ -421,7 +423,7 @@ def test_create_workflow_from_notebooks_with_different_clusters(
             )
             notebook_1 >> notebook_2
 
-    assert len(task_group.children) == 2
+    assert len(task_group.children) == 3
     task_group.children["test_workflow.launch"].execute(context={})
     mock_jobs_api.return_value.create_job.assert_called_once_with(
         json=expected_workflow_json_existing_cluster_id,

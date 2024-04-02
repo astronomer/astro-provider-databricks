@@ -15,9 +15,6 @@ from airflow.utils.dates import days_ago
 from airflow.utils.db import create_session
 from airflow.utils.state import State
 from airflow.utils.task_group import TaskGroup
-from databricks_cli.sdk.service import JobsService
-
-
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
 from astro_databricks.plugins.plugin import (
@@ -28,8 +25,10 @@ from astro_databricks.plugins.plugin import (
     _get_dagrun,
     _get_databricks_task_id,
     _repair_task,
-    get_launch_task_id
+    get_launch_task_id,
 )
+from databricks_cli.sdk.service import JobsService
+
 
 @pytest.fixture
 def mock_dag():
@@ -378,7 +377,7 @@ def test_create_workflow_with_nested_task_groups(
             extra_job_params=extra_job_params,
             notebook_packages=[
                 {"pypi": {"package": "mlflow==2.4.0"}},
-            ]
+            ],
         )
         with outer_task_group:
             direct_notebook = DatabricksNotebookOperator(
@@ -405,17 +404,18 @@ def test_create_workflow_with_nested_task_groups(
     task_id = get_launch_task_id(outer_task_group)
     assert task_id == "test_workflow.launch"
 
+
 def test_get_task_group_children(dag):
     repair_all_link = DatabricksJobRepairAllFailedLink()
     with dag:
         with TaskGroup("parent_task_group") as parent_task_group:
             parent_task = DummyOperator(task_id="parent_task")
             with TaskGroup("inner_task_group") as inner_task_group:
-                inner_task = DummyOperator(task_id="inner_task")
+                DummyOperator(task_id="inner_task")
             parent_task >> inner_task_group
 
     children = repair_all_link.get_task_group_children(parent_task_group)
     children_keys = children.keys()
     assert len(children_keys) == 2
-    assert 'parent_task_group.parent_task' in children_keys
-    assert 'parent_task_group.inner_task_group.inner_task' in children_keys
+    assert "parent_task_group.parent_task" in children_keys
+    assert "parent_task_group.inner_task_group.inner_task" in children_keys

@@ -1,12 +1,10 @@
 import os
 from datetime import datetime
 
-from airflow.decorators import dag, task_group
+from airflow.decorators import dag
 from airflow.utils.task_group import TaskGroup
-
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
-
 
 DATABRICKS_CONN = "databricks_conn"
 USER = os.environ.get("USER")
@@ -40,7 +38,9 @@ job_clusters = [
     schedule_interval="@daily",
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    default_args={'retries': 0},  # Users are encouraged to use the repair feature, retries may fail
+    default_args={
+        "retries": 0
+    },  # Users are encouraged to use the repair feature, retries may fail
     tags=["astro-provider-databricks"],
 )
 def example_task_group():
