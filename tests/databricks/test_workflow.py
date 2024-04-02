@@ -413,7 +413,6 @@ def test_create_workflow_from_notebooks_with_different_clusters(
                 databricks_conn_id="foo",
                 notebook_path="/foo/bar",
                 source="WORKSPACE",
-                job_cluster_key="foo",
                 existing_cluster_id="foo",
                 notebook_params={
                     "foo": "bar",
