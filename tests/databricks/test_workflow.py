@@ -421,7 +421,7 @@ def test_create_workflow_from_notebooks_with_different_clusters(
             )
             notebook_1 >> notebook_2
 
-    assert len(task_group.children) == 2
+    assert len(task_group.children) == 3
     task_group.children["test_workflow.launch"].execute(context={})
     mock_jobs_api.return_value.create_job.assert_called_once_with(
         json=expected_workflow_json_existing_cluster_id,
