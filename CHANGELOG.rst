@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.1 (03-04-24)
+----------------
+
+Bug fixes
+
+* Support ``existing_cluster_id`` for ``DatabricksNotebookOperator`` when used from within ``DatabricksWorkflowTaskGroup`` (PR `#73 <https://github.com/astronomer/astro-provider-databricks/pull/73>`_ by @Hang1225)
+
+
 0.2.0 (20-03-24)
 ----------------
 
