@@ -207,9 +207,17 @@ class DatabricksNotebookOperator(BaseOperator):
                 for t in self.upstream_task_ids
                 if t in relevant_upstreams
             ],
-            "job_cluster_key": self.job_cluster_key,
             **base_task_json,
         }
+
+        if self.existing_cluster_id and self.job_cluster_key:
+            raise ValueError ("Both existing_cluster_id and job_cluster_key are set. Only one cluster can be set per task.")
+        
+        if self.existing_cluster_id:
+            result['existing_cluster_id'] = self.existing_cluster_id
+        elif self.job_cluster_key:
+            result['job_cluster_key'] = self.job_cluster_key
+
         return result
 
     def _get_databricks_task_id(self, task_id: str):
