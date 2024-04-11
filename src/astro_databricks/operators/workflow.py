@@ -41,11 +41,8 @@ class DatabricksMetaData:
 
 
 def _get_job_by_name(job_name: str, jobs_api: JobsApi) -> dict | None:
-    jobs = jobs_api.list_jobs(version=DATABRICKS_JOBS_API_VERSION).get("jobs", [])
-    for job in jobs:
-        if job.get("settings", {}).get("name") == job_name:
-            return job
-    return None
+    jobs = jobs_api.list_jobs(version=DATABRICKS_JOBS_API_VERSION, name=job_name).get("jobs", [])
+    return jobs[0] if jobs else None 
 
 
 def flatten_node(
