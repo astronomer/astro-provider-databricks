@@ -115,6 +115,10 @@ def test_create_workflow_from_notebooks_with_create(
     mock_run_api, mock_jobs_api, mock_api, mock_hook, dag
 ):
     mock_jobs_api.return_value.create_job.return_value = {"job_id": 1}
+    # In unittest, this function returns a MagicMock object by default, which updates an existing workflow instead of creating a new one. 
+    # This causes the create_job assertion to fail. To prevent this, the function's return value should be overridden to an empty list.
+    mock_jobs_api.return_value.list_jobs.return_value.get.return_value = [] 
+
     with dag:
         task_group = DatabricksWorkflowTaskGroup(
             group_id="test_workflow",
@@ -391,6 +395,8 @@ def test_create_workflow_from_notebooks_with_different_clusters(
     mock_run_api, mock_jobs_api, mock_api, mock_hook, dag
 ):
     mock_jobs_api.return_value.create_job.return_value = {"job_id": 1}
+    mock_jobs_api.return_value.list_jobs.return_value.get.return_value = [] 
+    
     with dag:
         task_group = DatabricksWorkflowTaskGroup(
             group_id="test_workflow",
