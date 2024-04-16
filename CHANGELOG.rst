@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.2 (16-04-24)
+----------------
+
+Bug fixes
+
+* Prevent creation of duplicate jobs in Databricks (PR `#76 <https://github.com/astronomer/astro-provider-databricks/pull/76>`_ by @Hang1225)
+
+
 0.2.1 (03-04-24)
 ----------------
 
