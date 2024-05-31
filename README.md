@@ -13,9 +13,9 @@ There are a few advantages to defining your Databricks Workflows in Airflow:
 | Authoring interface                  | _Web-based via Databricks UI_ | _Code via Airflow DAG_ |
 | Workflow compute pricing             |              ✅               |           ✅           |
 | Notebook code in source control      |              ✅               |           ✅           |
-| Workflow structure in source control |                               |           ✅           |
+| Workflow structure in source control |              ✅               |           ✅           |
 | Retry from beginning                 |              ✅               |           ✅           |
-| Retry single task                    |                               |           ✅           |
+| Retry single task                    |              ✅               |           ✅           |
 | Task groups within Workflows         |                               |           ✅           |
 | Trigger workflows from other DAGs    |                               |           ✅           |
 | Workflow-level parameters            |                               |           ✅           |
