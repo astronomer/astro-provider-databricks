@@ -15,11 +15,12 @@ default_args = {
 }
 
 DATABRICKS_CONN_ID = os.getenv("ASTRO_DATABRICKS_CONN_ID", "databricks_conn")
-DATABRICKS_NOTIFICATION_EMAIL = os.getenv(
-    "ASTRO_DATABRICKS_NOTIFICATION_EMAIL", "tatiana.alchueyr@astronomer.io"
-)
+
+# DATABRICKS_NOTIFICATION_EMAIL = os.getenv(
+#     "ASTRO_DATABRICKS_NOTIFICATION_EMAIL", "tatiana.alchueyr@astronomer.io"
+# )
 DATABRICKS_DESTINATION_ID = os.getenv(
-    "ASTRO_DATABRICKS_DESTINATION_ID", "b0aea8ab-ea8c-4a45-a2e9-9a26753fd702"
+    "ASTRO_DATABRICKS_DESTINATION_ID", "48c7315c-1d65-4ee3-b7d3-1692e8e8012d"
 )
 
 USER = os.environ.get("USER")
@@ -32,14 +33,7 @@ job_cluster_spec = [
         "new_cluster": {
             "cluster_name": "",
             "spark_version": "11.3.x-scala2.12",
-            "aws_attributes": {
-                "first_on_demand": 1,
-                "availability": "SPOT_WITH_FALLBACK",
-                "zone_id": "us-east-2b",
-                "spot_bid_price_percent": 100,
-                "ebs_volume_count": 0,
-            },
-            "node_type_id": "i3.xlarge",
+            "node_type_id": "Standard_DS3_v2",
             "spark_env_vars": {"PYSPARK_PYTHON": "/databricks/python3/bin/python3"},
             "enable_elastic_disk": False,
             "data_security_mode": "LEGACY_SINGLE_USER_STANDARD",
@@ -72,9 +66,10 @@ with dag:
             },
         ],
         extra_job_params={
-            "email_notifications": {
-                "on_start": [DATABRICKS_NOTIFICATION_EMAIL],
-            },
+            ## Commented below to avoid spam; keeping this for example purposes.
+            # "email_notifications": {
+            #     "on_start": [DATABRICKS_NOTIFICATION_EMAIL],
+            # },
             "webhook_notifications": {
                 "on_start": [{"id": DATABRICKS_DESTINATION_ID}],
             },
