@@ -172,7 +172,7 @@ jobs:
           path: ./.coverage
     env:
       DATABRICKS_CONN_TOKEN: ${{ secrets.DATABRICKS_CONN_TOKEN }}
-      DATABRICKS_CONN_HOST: https://adb-2703548196728655.15.azuredatabricks.net/
+      DATABRICKS_CONN_HOST: {{ secrets.DATABRICKS_CONN_HOST }}
       DATABRICKS_CONN: ${{ secrets.AIRFLOW_CONN_DATABRICKS_DEFAULT }}
 
 
