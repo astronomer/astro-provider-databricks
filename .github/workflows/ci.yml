@@ -172,7 +172,9 @@ jobs:
           path: ./.coverage
     env:
       DATABRICKS_CONN_TOKEN: ${{ secrets.DATABRICKS_CONN_TOKEN }}
-      DATABRICKS_CONN_HOST: https://dbc-9c390870-65ef.cloud.databricks.com/
+      DATABRICKS_CONN_HOST: {{ secrets.DATABRICKS_CONN_HOST }}
+      DATABRICKS_CONN: ${{ secrets.AIRFLOW_CONN_DATABRICKS_DEFAULT }}
+
 
   Code-Coverage:
     if: github.event.action != 'labeled'
