@@ -1,3 +1,26 @@
+.. warning::
+    All the operators and their functionality within this repository have been deprecated and will not receive further updates.
+    Read more about the deprecation in the `Deprecation Notice` section below.
+
+Deprecation Notice
+------------------
+
+With the release ``0.3.0`` of the ``astro-provider-databricks`` package, this provider stands deprecated and will
+no longer receive updates. We recommend migrating to the official Apache Airflow Databricks Provider for the latest features and support.
+For the operators and sensors that are deprecated in this repository, migrating to the official Apache Airflow Databricks Provider
+is as simple as changing the import path from
+
+.. code-block::
+
+    from astro_databricks import import SomeOperator
+
+to
+
+.. code-block::
+
+    from airflow.providers.databricks.operators.operator_module import SomeOperator
+
+
 Astro Databricks Provider
 =========================
 

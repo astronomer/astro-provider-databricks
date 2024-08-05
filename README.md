@@ -1,3 +1,6 @@
+## Deprecation Notice
+This provider is now deprecated since version 0.3.0 and will not be maintained. Please use the official [Apache Airflow Databricks Provider >= 6.8.0](https://airflow.apache.org/docs/apache-airflow-providers-databricks/stable/index.html) instead.
+
 <h1 align="center">
   Databricks Workflows in Airflow
 </h1>
