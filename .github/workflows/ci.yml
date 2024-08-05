@@ -2,7 +2,7 @@
 name: Build and test astro databricks provider
 on:  # yamllint disable-line rule:truthy
   push:
-    branches: [main]
+    branches: [main, deprecate-provider]
 
   pull_request:
     branches: [main, 'release-**']
@@ -78,7 +78,7 @@ jobs:
       fail-fast: false
       matrix:
         python: ['3.8', '3.9', '3.10']
-        airflow: [2.5]
+        airflow: [2.7]
     if: >-
       github.event_name == 'push' ||
       (
@@ -125,7 +125,7 @@ jobs:
       fail-fast: false
       matrix:
         python: ['3.8', '3.9', '3.10']
-        airflow: ['2.3', '2.4', '2.5', '2.6', '2.7', '2.8']
+        airflow: ['2.7', '2.8']
 
     if: >-
       github.event_name == 'push' ||
@@ -172,7 +172,7 @@ jobs:
           path: ./.coverage
     env:
       DATABRICKS_CONN_TOKEN: ${{ secrets.DATABRICKS_CONN_TOKEN }}
-      DATABRICKS_CONN_HOST: {{ secrets.DATABRICKS_CONN_HOST }}
+      DATABRICKS_CONN_HOST: ${{ secrets.DATABRICKS_CONN_HOST }}
       DATABRICKS_CONN: ${{ secrets.AIRFLOW_CONN_DATABRICKS_DEFAULT }}
 
 
