@@ -1,5 +1,18 @@
 ## Deprecation Notice
-This provider is now deprecated since version 0.3.0 and will not be maintained. Please use the official [Apache Airflow Databricks Provider >= 6.8.0](https://airflow.apache.org/docs/apache-airflow-providers-databricks/stable/index.html) instead.
+
+With the release ``0.3.0`` of the ``astro-provider-databricks`` package, this provider stands deprecated and will
+no longer receive updates. We recommend migrating to the official ``apache-airflow-providers-databricks>= 6.8.0`` for the latest features and support.
+For the operators and sensors that are deprecated in this repository, migrating to the official Apache Airflow Databricks Provider
+is as simple as changing the import path in your DAG code as per the below examples.
+
+| Previous import path used (Deprecated now)                                    | Suggested import path to use                                                                                |
+|-------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `from astro_databricks.operators.notebook import DatabricksNotebookOperator`  | `from airflow.providers.databricks.operators.databricks import DatabricksNotebookOperator`                  |
+| `from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup` | `from airflow.providers.databricks.operators.databricks_workflow import DatabricksWorkflowTaskGroup`        |
+| `from astro_databricks.operators.common import DatabricksTaskOperator`        | `from airflow.providers.databricks.operators.databricks import DatabricksTaskOperator`                      |
+| `from astro_databricks.plugins.plugin import AstroDatabricksPlugin`           | `from airflow.providers.airflow.providers.databricks.plugins.databricks_workflow import DatabricksWorkflowPlugin` |
+
+# Archives
 
 <h1 align="center">
   Databricks Workflows in Airflow

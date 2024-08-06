@@ -6,19 +6,23 @@ Deprecation Notice
 ------------------
 
 With the release ``0.3.0`` of the ``astro-provider-databricks`` package, this provider stands deprecated and will
-no longer receive updates. We recommend migrating to the official Apache Airflow Databricks Provider for the latest features and support.
+no longer receive updates. We recommend migrating to the official ``apache-airflow-providers-databricks>=6.8.0`` for the latest features and support.
 For the operators and sensors that are deprecated in this repository, migrating to the official Apache Airflow Databricks Provider
-is as simple as changing the import path from
+is as simple as changing the import path in your DAG code as per the below examples.
 
-.. code-block::
+.. list-table:: Import paths to change for migrating to the official Apache Airflow Databricks Provider
+   :header-rows: 1
 
-    from astro_databricks import import SomeOperator
-
-to
-
-.. code-block::
-
-    from airflow.providers.databricks.operators.operator_module import SomeOperator
+   * - Previous import path used
+     - Newer import path to use
+   * - from astro_databricks.operators.notebook import DatabricksNotebookOperator
+     - from airflow.providers.databricks.operators.databricks import DatabricksNotebookOperator
+   * - from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
+     - from airflow.providers.databricks.operators.databricks_workflow import DatabricksWorkflowTaskGroup
+   * - from astro_databricks.operators.common import DatabricksTaskOperator
+     - from airflow.providers.databricks.operators.databricks import DatabricksTaskOperator
+   * - from astro_databricks.plugins.plugin import AstroDatabricksPlugin
+     - from airflow.providers.airflow.providers.databricks.plugins.databricks_workflow import DatabricksWorkflowPlugin
 
 
 Astro Databricks Provider
