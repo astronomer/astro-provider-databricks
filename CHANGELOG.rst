@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.3.0rc1 (06-08-24)
+-------------------
+
+Deprecations
+
+* Deprecate the provider and proxy instantiations to upstream official Apache Airflow Databricks provider (PR `#84 <https://github.com/astronomer/astro-provider-databricks/pull/84>`_ by @pankajkoti)
+
+
 0.2.2 (16-04-24)
 ----------------
 
