@@ -2,7 +2,7 @@
 name: Build and test astro databricks provider
 on:  # yamllint disable-line rule:truthy
   push:
-    branches: [main, deprecate-provider]
+    branches: [main]
 
   pull_request:
     branches: [main, 'release-**']
