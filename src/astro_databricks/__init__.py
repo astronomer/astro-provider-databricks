@@ -3,7 +3,7 @@ from astro_databricks.operators.common import DatabricksTaskOperator
 from astro_databricks.operators.notebook import DatabricksNotebookOperator
 from astro_databricks.operators.workflow import DatabricksWorkflowTaskGroup
 
-__version__ = "0.2.2"
+__version__ = "0.3.0rc1"
 __all__ = [
     "DatabricksNotebookOperator",
     "DatabricksWorkflowTaskGroup",
