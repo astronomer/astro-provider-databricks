@@ -6,7 +6,7 @@ Changelog
 
 Maintenance
 
-* Mark project as inactive across README and docs; Update project classifier to ``Development Status :: 7 - Inactive`` (PR `#86 <https://github.com/astronomer/astro-provider-databricks/pull/86>`_ by @pankajkoti)
+* Mark project as inactive across README and docs; Update project classifier to ``Development Status :: 7 - Inactive`` (PR `#87 <https://github.com/astronomer/astro-provider-databricks/pull/87>`_ by @pankajkoti)
 
 0.3.0 (08-08-24)
 -------------------
