@@ -215,7 +215,7 @@ jobs:
       - Build-Docs
       - Run-Unit-Tests
       # - Run-Example-DAGs
-      - Code-Coverage
+      # - Code-Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
