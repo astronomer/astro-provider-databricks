@@ -21,7 +21,7 @@ keywords = [
     "dags",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 7 - Inactive",
     "Framework :: Apache Airflow",
     "Framework :: Apache Airflow :: Provider",
     "Intended Audience :: Developers",
