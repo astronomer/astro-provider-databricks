@@ -1,5 +1,3 @@
-## Project Inactive
-
 ## ⚠️ Discontinuation of project
 > In August 2024, Astronomer [donated the features available in this provider](https://github.com/astronomer/astro-provider-databricks/pull/84) to the [Apache Airflow repository](https://github.com/apache/airflow/tree/main/providers/databricks).
 > The features available in this repository are available  in ``apache-airflow-providers-databricks>= 6.8.0``.
