@@ -2,7 +2,7 @@
 name: Build and test astro databricks provider
 on:  # yamllint disable-line rule:truthy
   push:
-    branches: [main]
+    branches: [main, mark-project-inactive]
 
   pull_request:
     branches: [main, 'release-**']
@@ -115,7 +115,7 @@ jobs:
       - run: pip3 install nox packaging
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- --ignore "tests/test_example_dags.py" --cov-report=xml
       - name: Upload coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-unit-tests-${{ matrix.python }}-${{ matrix.airflow }}
           path: ./.coverage
@@ -166,7 +166,7 @@ jobs:
       - run: pip3 install nox packaging
       - run: DATABRICKS_GROUP_ID="${{github.run_id}}_${{matrix.python}}_${{matrix.airflow}}" nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- "tests/test_example_dags.py" --cov-report=xml
       - name: Upload coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-example-dags-${{ matrix.python }}-${{ matrix.airflow }}
           path: ./.coverage
@@ -192,7 +192,7 @@ jobs:
         run: |
           pip3 install coverage
       - name: Download all artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v5
         with:
           path: ./coverage
       - name: Run coverage
