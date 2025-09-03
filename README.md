@@ -1,9 +1,12 @@
-## Deprecation Notice
+## ⚠️ Discontinuation of project
+> In August 2024, Astronomer [donated the features available in this provider](https://github.com/astronomer/astro-provider-databricks/pull/84) to the [Apache Airflow repository](https://github.com/apache/airflow/tree/main/providers/databricks).
+> The features available in this repository are available  in ``apache-airflow-providers-databricks>= 6.8.0``.
+> This repository is no longer actively maintained by Astronomer, and the code is kept here for historical purposes only.
+> You can still contribute, submit bug fixes, and improvements in this project's [new home](https://github.com/apache/airflow/tree/main/providers/databricks), under the terms of its license. 
+> Please note that this deprecated version of the provider may not work with the latest dependencies or platforms, and it could contain security vulnerabilities. Astronomer cannot offer guarantees or warranties for its use.
+> Thanks for being part of the open-source journey and helping keep great ideas alive!
 
-With the release ``0.3.0`` of the ``astro-provider-databricks`` package, this provider stands deprecated and will
-no longer receive updates. We recommend migrating to the official ``apache-airflow-providers-databricks>= 6.8.0`` for the latest features and support.
-For the operators and sensors that are deprecated in this repository, migrating to the official Apache Airflow Databricks Provider
-is as simple as changing the import path in your DAG code as per the below examples.
+For the operators and sensors that are deprecated in this repository, migrating to the official Apache Airflow Databricks Provider is as simple as changing the import path in your DAG code as per the below examples.
 
 | Previous import path used (Deprecated now)                                    | Suggested import path to use                                                                                |
 |-------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|

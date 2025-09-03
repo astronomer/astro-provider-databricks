@@ -1,14 +1,16 @@
 .. warning::
-    All the operators and their functionality within this repository have been deprecated and will not receive further updates.
-    Read more about the deprecation in the `Deprecation Notice` section below.
+    This project is inactive and no longer maintained. We recommend migrating to the official
+    ``apache-airflow-providers-databricks>=6.8.0`` for the latest features and support.
+    The operators from this repository have been donated to and are included in the official
+    Apache Airflow Databricks provider. Read more in the ``Deprecation Notice`` section below.
 
 Deprecation Notice
 ------------------
 
-With the release ``0.3.0`` of the ``astro-provider-databricks`` package, this provider stands deprecated and will
+With the release ``0.3.0`` of the ``astro-provider-databricks`` package, this provider stands deprecated and is now inactive. It will
 no longer receive updates. We recommend migrating to the official ``apache-airflow-providers-databricks>=6.8.0`` for the latest features and support.
 For the operators and sensors that are deprecated in this repository, migrating to the official Apache Airflow Databricks Provider
-is as simple as changing the import path in your DAG code as per the below examples.
+is as simple as changing the import path in your DAG code as per the below examples. The operators from this repository have been donated to and are included in the official provider.
 
 .. list-table:: Import paths to change for migrating to the official Apache Airflow Databricks Provider
    :header-rows: 1
