@@ -1,11 +1,14 @@
 .. warning::
-    This project is inactive and no longer maintained. We recommend migrating to the official
-    ``apache-airflow-providers-databricks>=6.8.0`` for the latest features and support.
-    The operators from this repository have been donated to and are included in the official
-    Apache Airflow Databricks provider. Read more in the ``Deprecation Notice`` section below.
+    Discontinuation of project
 
-Deprecation Notice
-------------------
+    - In August 2024, Astronomer `donated the features available in this provider <https://github.com/astronomer/astro-provider-databricks/pull/84>`_ to the `Apache Airflow Databricks provider <https://github.com/apache/airflow/tree/main/providers/databricks>`_.
+    - All features from this repository are available via ``apache-airflow-providers-databricks>=6.8.0``.
+    - This repository is no longer actively maintained; documentation is kept for historical purposes only.
+    - You can continue contributing in the provider's `new home <https://github.com/apache/airflow/tree/main/providers/databricks>`_.
+    - This deprecated version may not work with the latest dependencies or platforms and could contain security vulnerabilities. Astronomer cannot offer guarantees or warranties for its use.
+
+Discontinuation Notice
+----------------------
 
 With the release ``0.3.0`` of the ``astro-provider-databricks`` package, this provider stands deprecated and is now inactive. It will
 no longer receive updates. We recommend migrating to the official ``apache-airflow-providers-databricks>=6.8.0`` for the latest features and support.
